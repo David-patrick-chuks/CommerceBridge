@@ -25,6 +25,9 @@ clip-server/.env.*
 
 # Uploads and generated files
 backend/uploads/
+# Cursor rules
+.cursor/
+.cursorrules
 
 # WhatsApp Web JS auth/cache
 backend/.wwebjs_cache/
@@ -52,3 +55,4 @@ Thumbs.db
 
 # Ignore by pattern
 # docs/generated/ 
+

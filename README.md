@@ -1,12 +1,19 @@
 # CommerceBridge 🛍️
 
-A personalized online store solution that integrates seamlessly with WhatsApp Business, enabling small and medium businesses (SMBs) to create professional e-commerce experiences within their WhatsApp ecosystem.
+A personalized online store solution that integrates seamlessly with WhatsApp, enabling small and medium businesses (SMBs) to create professional e-commerce experiences within their WhatsApp ecosystem using a smart chatbot interface. (**Note:** We use WhatsApp Web JS, not WhatsApp Business API.)
+
+> **For the project vision, see [PROJECT_VISION.md](./PROJECT_VISION.md). For a technical deep-dive on image-based product matching, see [README_IMAGE_MATCHING.md](./README_IMAGE_MATCHING.md).**
 
 ## 🎯 Overview
 
 CommerceBridge is a **WhatsApp-first e-commerce platform** where customers and sellers interact entirely through a smart chatbot interface. Think of it as "Jumia on WhatsApp" - everything happens within WhatsApp conversations, from browsing products to completing orders. The CommerceBridge bot serves as the middleman, handling all transactions and communications between customers and sellers without direct contact.
 
 **Key Concept**: No separate website or app needed - the entire e-commerce experience happens through WhatsApp chat!
+
+## 📚 Documentation Map
+- **Vision & Philosophy:** [PROJECT_VISION.md](./PROJECT_VISION.md)
+- **Main Features & Setup:** (this README)
+- **AI Image Matching & Architecture:** [README_IMAGE_MATCHING.md](./README_IMAGE_MATCHING.md)
 
 ## 🚀 Key Features
 
@@ -40,10 +47,60 @@ CommerceBridge is a **WhatsApp-first e-commerce platform** where customers and s
 - 🛡️ **Privacy Controls**
 - 🛡️ **Verified Business Badges**
 
-## ��️ Technology Stack
+---
+
+## 🤖 AI-Powered Image-Based Product Matching (CLIP + RAG)
+
+CommerceBridge supports advanced image search and matching, enabling sellers to upload product images and customers to find products by uploading their own images via WhatsApp. This system uses OpenAI CLIP for image embeddings, a hybrid Retrieval-Augmented Generation (RAG) system for search, and MongoDB Atlas for vector and keyword search.
+
+### How It Works
+- **Sellers** can upload product images and details via WhatsApp. The system embeds, deduplicates, and stores these products.
+- **Customers** can upload an image of a product they want to find. The bot returns the most similar products from the catalog.
+- **Hybrid Search** combines semantic (vector) and keyword (text) search for best results.
+
+### Architecture
+- **Node.js WhatsApp Bot** (`backend/`): Handles WhatsApp interactions, receives images and product details, and communicates with the Python FastAPI server for embedding and search.
+- **Python FastAPI Server** (`clip-server/`): Runs CLIP for image embedding, implements hybrid RAG search and deduplication, and connects to MongoDB Atlas for storage and retrieval.
+- **MongoDB Atlas**: Stores product data, embeddings, and metadata, and provides vector and text search capabilities.
+
+### Example User Flows
+**Seller:**
+1. `/seller` → “Please send the product image.”
+2. Upload image → “Please provide the product name.”
+3. Enter name → “Please provide the price.”
+4. Enter price → “Please provide the product description.”
+5. Enter description → “Product added successfully!”
+
+**Customer:**
+1. `/customer` → “Please send an image to find similar products.”
+2. Upload image → Bot returns top matches with details and options.
+
+---
+
+## 🗂️ Updated Project Structure
+
+```
+commerce-bridge/
+├── backend/                 # Backend API server (Node.js, WhatsApp bot, business logic)
+│   └── src/
+│       └── ...
+├── frontend/                # React frontend application (web interface)
+│   └── src/
+│       └── ...
+├── clip-server/             # Python FastAPI server for CLIP embedding & RAG search
+│   ├── app/
+│   └── ...
+├── shared/                  # Shared types and utilities
+├── docs/                    # Documentation
+└── README_IMAGE_MATCHING.md # Image matching architecture & details
+```
+
+---
+
+## 🛠️ Technology Stack
 
 ### Frontend
-- **React.js** with TypeScript
+- **React.js** with TypeScript (for account creation web interface only)
 - **Material-UI** or **Tailwind CSS** for styling
 - **React Router** for navigation
 - **React Query** for state management
@@ -51,7 +108,7 @@ CommerceBridge is a **WhatsApp-first e-commerce platform** where customers and s
 ### Backend
 - **Node.js** with TypeScript
 - **Express.js** framework
-- **WhatsApp Web JS** for WhatsApp integration
+- **WhatsApp Web JS** for WhatsApp integration (**not WhatsApp Business API**)
 - **Paystack SDK** for payment processing
 
 ### Database
@@ -261,20 +318,73 @@ API documentation is available at `/api-docs` when the server is running. The AP
 - **WhatsApp**: Message handling and webhook processing
 - **Analytics**: Sales reports and business insights
 
-## 🚀 Deployment
+## 🚀 Deployment (All Services)
 
-### Production Deployment
-1. Set up production environment variables
-2. Build the application: `npm run build`
-3. Set up reverse proxy (Nginx)
-4. Configure SSL certificates
-5. Set up monitoring and logging
-
-### Docker Deployment
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
+### 1. MongoDB Atlas Setup
+- Create a `commercebridge` database and `products` collection.
+- Create a vector search index on the `embedding` field (768 dimensions, cosine similarity) and a text index for product search.
+- Example vector index config:
+```json
+{
+  "name": "product_embedding_vector_index",
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "embedding": {
+        "dimensions": 768,
+        "similarity": "cosine",
+        "type": "knnVector"
+      }
+    }
+  }
+}
 ```
+
+### 2. Python FastAPI Server (`clip-server/`)
+- Install dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- Copy `.env.example` to `.env` and fill in your MongoDB Atlas credentials.
+- Run the server:
+  ```bash
+  uvicorn app.main:app --host 0.0.0.0 --port 8000
+  ```
+
+### 3. Node.js WhatsApp Bot (`backend/`)
+- Integrate image upload and search endpoints to communicate with the Python server.
+- Install dependencies:
+  ```bash
+  npm install
+  ```
+- Run the bot:
+  ```bash
+  npm run dev
+  ```
+
+### 4. Frontend (`frontend/`)
+- Install dependencies:
+  ```bash
+  npm install
+  ```
+- Run the frontend:
+  ```bash
+  npm start
+  ```
+
+---
+
+## 🔒 Security & Extensibility Notes
+- All uploads and API endpoints should be secured in production.
+- Use HTTPS for all communications.
+- Deduplication is enforced via SHA256 hashing of images.
+- The architecture supports future integration with pricing intelligence, external metadata, and more.
+- Monitor MongoDB Atlas for performance and deduplication.
+- Consider production hardening (security, error handling, scaling).
+
+---
+
+For more details, see `README_IMAGE_MATCHING.md` and `clip-server/README.md`.
 
 ## 🤝 Contributing
 
@@ -323,11 +433,13 @@ For support and questions:
 
 ## 🙏 Acknowledgments
 
-- WhatsApp Business API for messaging integration
+- WhatsApp Web JS for messaging integration
 - Paystack for payment processing
 - React and Node.js communities for excellent tooling
 - All contributors and supporters of this project
 
 ---
 
-**CommerceBridge** - Bridging WhatsApp Business with Professional E-commerce 🚀 
+**CommerceBridge** - Bridging WhatsApp with Professional E-commerce 🚀
+
+> For the full vision, see [PROJECT_VISION.md](./PROJECT_VISION.md). For technical details on image-based product matching, see [README_IMAGE_MATCHING.md](./README_IMAGE_MATCHING.md). 

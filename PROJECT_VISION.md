@@ -15,6 +15,7 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 - **Complete payments** through the chat
 - **Track orders** with real-time updates
 - **Get support** without leaving WhatsApp
+- **Find products by uploading an image** (AI-powered image search)
 
 ### For Sellers:
 - **Upload products** by sending photos and details to the bot
@@ -22,6 +23,7 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 - **Track sales** and analytics via chat
 - **Handle orders** and customer inquiries
 - **Receive payments** automatically
+- **Add new products by uploading images** (AI-powered image matching and deduplication)
 
 ## 🔄 User Journey Examples
 
@@ -33,10 +35,11 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 5. **Checkout**: "I'm ready to pay" → Bot sends payment link
 6. **Track**: "Where is my order?" → Bot shows real-time status
 7. **Receipt**: After payment, bot sends a digital receipt image to the customer via WhatsApp
+8. **Image Search**: Upload a product image → Bot returns similar products using AI-powered matching
 
 ### Seller Journey:
 1. **Register**: Click web link to create seller account
-2. **Upload**: Send product photos + details to bot
+2. **Upload**: Send product photos + details to bot (AI deduplication and embedding)
 3. **Manage**: "Show my products" → Bot lists inventory
 4. **Update**: "Change price of item #2 to $25" → Bot updates
 5. **Monitor**: "Show today's sales" → Bot provides analytics
@@ -50,6 +53,8 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 - **Seller-friendly** - Easy product management
 - **Payment integrated** - Seamless transactions
 - **Real-time updates** - Instant notifications
+- **AI-powered image search and matching** - Find and add products using images
+- **WhatsApp Web JS integration** - No reliance on WhatsApp Business API
 
 ### 🆚 vs Traditional E-commerce:
 | Traditional | CommerceBridge |
@@ -68,6 +73,7 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 | No payments | Integrated payments |
 | Limited features | Full e-commerce |
 | Direct contact | Bot intermediary |
+| No image-based search | AI-powered image search |
 
 ## 🎯 Target Users
 
@@ -90,6 +96,7 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 - 99.9% uptime
 - Payment success rate > 95%
 - User session completion > 80%
+- Image search accuracy and speed
 
 ### Business:
 - Number of active sellers
@@ -126,4 +133,11 @@ CommerceBridge will democratize e-commerce by making it accessible to anyone wit
 - Third-party integrations (delivery, accounting, inventory)
 - Scheduled messages
 - Privacy controls
-- Verified business badges 
+- Verified business badges
+- **AI-powered image search and matching**
+- **Hybrid RAG search and deduplication**
+- **Secure, scalable WhatsApp Web JS integration**
+
+---
+
+*For technical details, see the main README and README_IMAGE_MATCHING.md.* 

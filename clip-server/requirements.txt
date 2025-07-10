@@ -1,7 +1,8 @@
 fastapi
 uvicorn
 torch
-clip-by-openai
+torchvision
+open-clip-torch
 pymongo
 pillow
 nltk

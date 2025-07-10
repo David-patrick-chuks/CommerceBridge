@@ -1,7 +1,9 @@
 # CommerceBridge: AI-Powered Image-Based Product Matching (CLIP + RAG)
 
+> **This document is a technical deep-dive. For a high-level overview, see the main [README.md](./README.md) and [PROJECT_VISION.md](./PROJECT_VISION.md).**
+
 ## Overview
-This update introduces advanced image search and matching to CommerceBridge, enabling sellers to upload product images and customers to find products by uploading their own images via WhatsApp. The system uses OpenAI CLIP for image embeddings, a hybrid Retrieval-Augmented Generation (RAG) system for search, and MongoDB Atlas for vector and keyword search.
+CommerceBridge enables sellers to upload product images and customers to find products by uploading their own images via WhatsApp. The system uses OpenAI CLIP for image embeddings, a hybrid Retrieval-Augmented Generation (RAG) system for search, and MongoDB Atlas for vector and keyword search. This feature is a core differentiator of CommerceBridge and is fully integrated with the WhatsApp-first shopping experience (via WhatsApp Web JS, not WhatsApp Business API).
 
 ---
 
@@ -12,7 +14,7 @@ commerce-bridge/
 ├── backend/         # Node.js WhatsApp bot, API, business logic
 ├── frontend/        # React web interface
 ├── shared/          # (Optional) Shared types/utilities
-├── clip-server/     # NEW: Python FastAPI server for CLIP embedding & RAG search
+├── clip-server/     # Python FastAPI server for CLIP embedding & RAG search
 └── README_IMAGE_MATCHING.md  # (This file)
 ```
 
@@ -77,23 +79,40 @@ commerce-bridge/
 ### 1. MongoDB Atlas
 - Create a `commercebridge` database and `products` collection.
 - Create a vector search index and text index as described in the implementation.
+- Example vector index config:
+```json
+{
+  "name": "product_embedding_vector_index",
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "embedding": {
+        "dimensions": 768,
+        "similarity": "cosine",
+        "type": "knnVector"
+      }
+    }
+  }
+}
+```
 
 ### 2. Python FastAPI Server (`clip-server/`)
 - Place all Python code for CLIP embedding and RAG search in this directory.
 - Install dependencies:
   ```bash
-  pip install fastapi uvicorn torch clip-by-openai pymongo pillow nltk scikit-learn
+  pip install -r requirements.txt
   ```
+- Copy `.env.example` to `.env` and fill in your MongoDB Atlas credentials.
 - Run the server:
   ```bash
-  uvicorn server:app --host 0.0.0.0 --port 8000
+  uvicorn app.main:app --host 0.0.0.0 --port 8000
   ```
 
 ### 3. Node.js WhatsApp Bot (`backend/`)
 - Integrate image upload and search endpoints to communicate with the Python server.
 - Install dependencies:
   ```bash
-  npm install whatsapp-web.js qrcode-terminal axios form-data
+  npm install
   ```
 - Run the bot:
   ```bash
@@ -117,11 +136,14 @@ commerce-bridge/
 
 ---
 
-## Notes
-- **Buttons/Quick Replies**: As of 2025, WhatsApp has deprecated classic buttons. Use plain text or lists for interactivity, or migrate to the WhatsApp Business API for advanced features.
-- **Scalability**: MongoDB Atlas vector search is optimized for large catalogs.
-- **Security**: All uploads and API endpoints should be secured in production.
-- **Extensibility**: The architecture supports future integration with pricing intelligence, external metadata, and more.
+## Security, Scalability & Extensibility Notes
+- All uploads and API endpoints should be secured in production.
+- Use HTTPS for all communications.
+- Deduplication is enforced via SHA256 hashing of images.
+- The architecture supports future integration with pricing intelligence, external metadata, and more.
+- Monitor MongoDB Atlas for performance and deduplication.
+- Consider production hardening (security, error handling, scaling).
+- WhatsApp Web JS is used for integration (not WhatsApp Business API).
 
 ---
 
@@ -133,4 +155,4 @@ commerce-bridge/
 
 ---
 
-For more details, see the implementation and code comments in the project. 
+For a high-level overview, see the main [README.md](./README.md) and [PROJECT_VISION.md](./PROJECT_VISION.md). 
