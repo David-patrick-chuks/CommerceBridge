@@ -3,17 +3,10 @@ import mongoose from 'mongoose';
 import qrcode from 'qrcode';
 import { Client, Message, MessageMedia, RemoteAuth } from 'whatsapp-web.js';
 import { MongoStore } from 'wwebjs-mongo';
+import { BotStatus, OrderData } from '../types';
 import { ConversationFlow } from './conversation-flow';
 import { MessageHandler } from './message-handler';
 import { ChatSession } from './session-manager';
-
-export interface BotStatus {
-  isConnected: boolean;
-  isReady: boolean;
-  qrCode?: string;
-  lastActivity: Date;
-  sessionInfo?: any;
-}
 
 export class WhatsAppBot extends EventEmitter {
   private client: Client;
@@ -45,7 +38,9 @@ export class WhatsAppBot extends EventEmitter {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--single-process', 
+          '--disable-software-rasterizer',       
         ]
       }
     });
@@ -57,7 +52,9 @@ export class WhatsAppBot extends EventEmitter {
     this.status = {
       isConnected: false,
       isReady: false,
-      lastActivity: new Date()
+      isConnecting: false,
+      lastActivity: new Date(),
+      connectionState: 'disconnected'
     };
 
     this.setupEventHandlers();
@@ -70,6 +67,8 @@ export class WhatsAppBot extends EventEmitter {
       try {
         this.qrCodeData = await qrcode.toDataURL(qr);
         this.status.qrCode = this.qrCodeData;
+        this.status.connectionState = 'connecting';
+        this.status.isConnecting = true;
         this.emit('qr', this.qrCodeData);
         console.log('✅ QR Code generated successfully');
       } catch (error) {
@@ -82,6 +81,8 @@ export class WhatsAppBot extends EventEmitter {
       console.log('✅ WhatsApp client is ready!');
       this.status.isReady = true;
       this.status.isConnected = true;
+      this.status.isConnecting = false;
+      this.status.connectionState = 'ready';
       this.status.lastActivity = new Date();
       this.emit('ready');
     });
@@ -90,6 +91,7 @@ export class WhatsAppBot extends EventEmitter {
     this.client.on('authenticated', () => {
       console.log('🔐 WhatsApp client authenticated');
       this.status.isConnected = true;
+      this.status.connectionState = 'connected';
       this.emit('authenticated');
     });
 
@@ -98,6 +100,8 @@ export class WhatsAppBot extends EventEmitter {
       console.log('❌ WhatsApp client disconnected:', reason);
       this.status.isConnected = false;
       this.status.isReady = false;
+      this.status.isConnecting = false;
+      this.status.connectionState = 'disconnected';
       this.emit('disconnected', reason);
     });
 
@@ -114,6 +118,8 @@ export class WhatsAppBot extends EventEmitter {
     // Error handling
     this.client.on('auth_failure', (error: any) => {
       console.error('❌ WhatsApp authentication failed:', error);
+      this.status.connectionState = 'disconnected';
+      this.status.isConnecting = false;
       this.emit('auth_failure', error);
     });
   }
@@ -173,7 +179,7 @@ export class WhatsAppBot extends EventEmitter {
     }
   }
 
-  public async sendDigitalReceipt(to: string, orderData: any): Promise<void> {
+  public async sendDigitalReceipt(to: string, orderData: OrderData): Promise<void> {
     try {
       // Generate receipt image
       const receiptImagePath = await this.generateReceiptImage(orderData);
@@ -211,8 +217,9 @@ export class WhatsAppBot extends EventEmitter {
           mongoose.connection.once('error', reject);
         });
       }
-      
+      console.log('[DEBUG] About to call this.client.initialize()');
       await this.client.initialize();
+      console.log('[DEBUG] this.client.initialize() completed successfully');
     } catch (error) {
       console.error('❌ Failed to initialize WhatsApp bot:', error);
       throw error;

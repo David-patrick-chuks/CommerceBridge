@@ -6,11 +6,12 @@ import { chatSession } from '../chatbot/session-manager';
 import { STORE_CATEGORIES } from '../constants/categories';
 import { UserModel } from '../models/user';
 import { uploadImage } from '../services/cloudinary-service';
+import { CreateUserRequest, StoreCategoriesResponse } from '../types';
 import { generateWelcomeBanner } from '../utils/banner-generator';
 // Assume whatsappClient is imported or passed in
 
 export const createOrUpdateUser = async (req: Request, res: Response, whatsappClient: any) => {
-  let { phoneNumber, name, email, userType, storeName, storeDescription, storeAddress, storeCategories } = req.body;
+  let { phoneNumber, name, email, userType, storeName, storeDescription, storeAddress, storeCategories }: CreateUserRequest = req.body;
   let profileImage = req.body.profileImage;
   if (!phoneNumber || !name || !email) {
     res.status(400).json({ error: 'phoneNumber, name, and email are required' });
@@ -53,6 +54,8 @@ export const createOrUpdateUser = async (req: Request, res: Response, whatsappCl
       await chatSession.updateSession(phoneNumber, session);
       console.log(`✅ needsAccount cleared for ${phoneNumber}`);
     }
+    // Force session refresh after account creation/update
+    await chatSession.refreshSessionFromDB(phoneNumber);
     // Send WhatsApp custom banner after account creation
     if (user && user.phoneNumber && user.name) {
       try {
@@ -91,7 +94,8 @@ export const getAllStoreCategories = async (req: Request, res: Response) => {
     const categories = await UserModel.distinct('storeCategories', { userType: 'seller', storeCategories: { $exists: true, $ne: [] } });
     // Flatten and dedupe in case of arrays
     const flat = Array.from(new Set(categories.flat().filter(Boolean)));
-    res.json({ categories: flat });
+    const response: StoreCategoriesResponse = { categories: flat };
+    res.json(response);
   } catch (err) {
     console.error('❌ Failed to fetch store categories:', err);
     res.status(500).json({ error: 'Failed to fetch store categories' });
@@ -99,5 +103,6 @@ export const getAllStoreCategories = async (req: Request, res: Response) => {
 };
 
 export const getAllPredefinedCategories = (req: Request, res: Response) => {
-  res.json({ categories: STORE_CATEGORIES });
+  const response: StoreCategoriesResponse = { categories: STORE_CATEGORIES };
+  res.json(response);
 }; 

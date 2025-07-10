@@ -4,15 +4,16 @@ import dotenv from 'dotenv';
 import express from 'express';
 import helmet from 'helmet';
 import { createServer } from 'http';
+import mongoose from 'mongoose'; // Added for MongoDB connection status
 import morgan from 'morgan';
 
 // Import services
 import { WhatsAppBot } from './chatbot/whatsapp-bot';
-import { OrderModel } from './models/order';
 import { DatabaseService } from './services/database-service';
 
 // Import routes
 import authRoutes from './routes/auth';
+import botRoutes from './routes/bot';
 import orderRoutes from './routes/orders';
 import paymentRoutes from './routes/payments';
 import productRoutes from './routes/products';
@@ -56,12 +57,234 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  try {
+    // Get system metrics
+    const uptime = process.uptime();
+    const memoryUsage = process.memoryUsage();
+    const botStatus = whatsappBot.getStatus();
+    
+    // Check database connections
+    const dbHealth = await databaseService.healthCheck();
+    const dbConnectionStatus = databaseService.getConnectionStatus();
+    
+    // Determine overall health
+    const isHealthy = dbHealth.mongodb && dbHealth.redis && botStatus.connectionState !== 'disconnected';
+    
+    const healthResponse = {
+      status: isHealthy ? 'healthy' : 'degraded',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      uptime: {
+        seconds: Math.floor(uptime),
+        formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`
+      },
+      services: {
+        mongodb: {
+          status: dbHealth.mongodb ? 'connected' : 'disconnected',
+          connectionState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        },
+        redis: {
+          status: dbHealth.redis ? 'connected' : 'disconnected',
+          connectionState: dbConnectionStatus.redis ? 'connected' : 'disconnected'
+        },
+        whatsappBot: {
+          status: botStatus.connectionState,
+          isReady: botStatus.isReady,
+          isConnected: botStatus.isConnected,
+          isConnecting: botStatus.isConnecting,
+          lastActivity: botStatus.lastActivity
+        }
+      },
+      system: {
+        memory: {
+          rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+          heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+          heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+          external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`
+        },
+        nodeVersion: process.version,
+        platform: process.platform,
+        pid: process.pid
+      },
+      endpoints: {
+        botStatus: `http://localhost:${PORT}/api/bot/status`,
+        qrCode: `http://localhost:${PORT}/api/bot/qr`,
+        health: `http://localhost:${PORT}/health`
+      }
+    };
+
+    res.status(isHealthy ? 200 : 503).json(healthResponse);
+  } catch (error) {
+    console.error('❌ Health check failed:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Health check failed',
+      message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Service unavailable'
+    });
+  }
+});
+
+// Detailed health check endpoint for monitoring
+app.get('/health/detailed', async (req, res) => {
+  try {
+    const startTime = Date.now();
+    const uptime = process.uptime();
+    const memoryUsage = process.memoryUsage();
+    const botStatus = whatsappBot.getStatus();
+    
+    // Check database connections
+    const dbHealth = await databaseService.healthCheck();
+    const dbConnectionStatus = databaseService.getConnectionStatus();
+    
+    // Get session information
+    const sessionManager = whatsappBot['sessionManager'];
+    const activeSessions = sessionManager ? sessionManager.getActiveSessions() : [];
+    const sessionCount = sessionManager ? sessionManager.getSessionCount() : 0;
+    
+    // Get database stats
+    let userCount = 0;
+    let orderCount = 0;
+    try {
+      const { UserModel } = await import('./models/user');
+      const { OrderModel } = await import('./models/order');
+      userCount = await UserModel.countDocuments();
+      orderCount = await OrderModel.countDocuments();
+    } catch (err) {
+      console.error('❌ Failed to get database stats:', err);
+    }
+    
+    const responseTime = Date.now() - startTime;
+    
+    const detailedHealthResponse = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      responseTime: `${responseTime}ms`,
+      uptime: {
+        seconds: Math.floor(uptime),
+        formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`
+      },
+      services: {
+        mongodb: {
+          status: dbHealth.mongodb ? 'connected' : 'disconnected',
+          connectionState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+          stats: {
+            users: userCount,
+            orders: orderCount
+          }
+        },
+        redis: {
+          status: dbHealth.redis ? 'connected' : 'disconnected',
+          connectionState: dbConnectionStatus.redis ? 'connected' : 'disconnected'
+        },
+        whatsappBot: {
+          status: botStatus.connectionState,
+          isReady: botStatus.isReady,
+          isConnected: botStatus.isConnected,
+          isConnecting: botStatus.isConnecting,
+          lastActivity: botStatus.lastActivity,
+          qrCodeAvailable: !!botStatus.qrCode
+        }
+      },
+      sessions: {
+        active: activeSessions.length,
+        total: sessionCount,
+        activeUsers: activeSessions.map(s => ({
+          phoneNumber: s.phoneNumber,
+          userType: s.userType,
+          lastActivity: s.lastActivity,
+          needsAccount: s.needsAccount
+        }))
+      },
+      system: {
+        memory: {
+          rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+          heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+          heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+          external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`,
+          heapUsagePercent: `${Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)}%`
+        },
+        nodeVersion: process.version,
+        platform: process.platform,
+        pid: process.pid,
+        cpuUsage: process.cpuUsage(),
+        env: process.env.NODE_ENV || 'development'
+      },
+      performance: {
+        responseTime,
+        memoryUsagePercent: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
+        uptimePercent: Math.round((uptime / (24 * 3600)) * 100) // Assuming 24h as 100%
+      },
+      endpoints: {
+        botStatus: `http://localhost:${PORT}/api/bot/status`,
+        qrCode: `http://localhost:${PORT}/api/bot/qr`,
+        health: `http://localhost:${PORT}/health`,
+        detailedHealth: `http://localhost:${PORT}/health/detailed`
+      }
+    };
+
+    res.status(200).json(detailedHealthResponse);
+  } catch (error) {
+    console.error('❌ Detailed health check failed:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Detailed health check failed',
+      message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Service unavailable'
+    });
+  }
+});
+
+// Readiness probe - checks if service is ready to accept traffic
+app.get('/ready', async (req, res) => {
+  try {
+    const dbHealth = await databaseService.healthCheck();
+    const botStatus = whatsappBot.getStatus();
+    
+    // Service is ready if databases are connected and bot is initialized
+    const isReady = dbHealth.mongodb && dbHealth.redis && botStatus.connectionState !== 'disconnected';
+    
+    if (isReady) {
+      res.status(200).json({
+        status: 'ready',
+        timestamp: new Date().toISOString(),
+        message: 'Service is ready to accept traffic'
+      });
+    } else {
+      res.status(503).json({
+        status: 'not_ready',
+        timestamp: new Date().toISOString(),
+        message: 'Service is not ready to accept traffic',
+        issues: {
+          mongodb: !dbHealth.mongodb ? 'disconnected' : 'connected',
+          redis: !dbHealth.redis ? 'disconnected' : 'connected',
+          whatsappBot: botStatus.connectionState === 'disconnected' ? 'disconnected' : 'connected'
+        }
+      });
+    }
+  } catch (error) {
+    res.status(503).json({
+      status: 'not_ready',
+      timestamp: new Date().toISOString(),
+      error: 'Readiness check failed'
+    });
+  }
+});
+
+// Liveness probe - checks if service is alive
+app.get('/live', (req, res) => {
+  const uptime = process.uptime();
+  
   res.status(200).json({
-    status: 'OK',
-    message: 'CommerceBridge WhatsApp Bot is running',
+    status: 'alive',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    uptime: {
+      seconds: Math.floor(uptime),
+      formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`
+    },
+    pid: process.pid
   });
 });
 
@@ -69,216 +292,11 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/api/pay', paymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api', shortUrlRoutes);
-
-// Dummy payment page
-app.get('/api/pay/dummy/:orderId', async (req, res) => {
-  const { orderId } = req.params;
-  const order = await OrderModel.findOne({ orderId });
-  if (!order) {
-    return res.status(404).send('Order not found');
-  }
-  if (order.paid) {
-    return res.redirect(`/api/pay/dummy/${orderId}/receipt`);
-  }
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Dummy Payment</title>
-  <style>
-    body { font-family: sans-serif; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-    .card { background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); text-align: center; }
-    .btn { background: #25d366; color: #fff; border: none; padding: 12px 32px; border-radius: 6px; font-size: 1.2em; cursor: pointer; margin-top: 24px; }
-    .btn:active { background: #128c7e; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>Pay for Order #${orderId}</h2>
-    <p>Total: <b>$${order.total}</b></p>
-    <form method="POST" action="/api/pay/dummy/${orderId}/confirm">
-      <button class="btn" type="submit">Pay</button>
-    </form>
-  </div>
-</body>
-</html>`);
-});
-
-// Dummy payment confirmation and digital receipt
-app.post('/api/pay/dummy/:orderId/confirm', express.urlencoded({ extended: true }), async (req, res) => {
-  const { orderId } = req.params;
-  const order = await OrderModel.findOne({ orderId });
-  if (!order) {
-    res.status(404).send('Order not found');
-    return;
-  }
-  order.paid = true;
-  await order.save();
-  // Send WhatsApp receipt if phoneNumber is available
-  if (order.phoneNumber) {
-    try {
-      const receiptMsg = `🧾 *Payment Successful!*\n\nOrder ID: ${orderId}\nTotal Paid: $${order.total}\n\nItems:\n${order.items.map(item => `${item.name} x${item.quantity} - $${item.price * item.quantity}`).join('\n')}\n\nThank you for shopping with CommerceBridge!`;
-      await whatsappBot.sendMessage(order.phoneNumber, receiptMsg);
-    } catch (err) {
-      console.error('❌ Failed to send WhatsApp receipt:', err);
-    }
-  }
-  // Render a simple digital receipt
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Payment Successful</title>
-  <style>
-    body { font-family: sans-serif; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-    .receipt { background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); text-align: center; }
-    .success { color: #25d366; font-size: 2em; }
-    .order { margin-top: 16px; }
-    .items { margin-top: 16px; text-align: left; }
-    .total { margin-top: 16px; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="receipt">
-    <div class="success">✔️ Payment Successful!</div>
-    <div class="order">Order ID: <b>${orderId}</b></div>
-    <div class="items">
-      <div>Items:</div>
-      <ul>
-        ${order.items.map(item => `<li>${item.name} x${item.quantity} - $${item.price * item.quantity}</li>`).join('')}
-      </ul>
-    </div>
-    <div class="total">Total Paid: $${order.total}</div>
-    <div style="margin-top:24px; color:#555;">Thank you for shopping with CommerceBridge!</div>
-  </div>
-</body>
-</html>`);
-  return;
-});
-
-app.get('/api/pay/dummy/:orderId/receipt', async (req, res) => {
-  const { orderId } = req.params;
-  const order = await OrderModel.findOne({ orderId });
-  if (!order || !order.paid) {
-    res.status(404).send('Receipt not available');
-    return;
-  }
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Digital Receipt</title>
-  <style>
-    body { font-family: sans-serif; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-    .receipt { background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); text-align: center; }
-    .success { color: #25d366; font-size: 2em; }
-    .order { margin-top: 16px; }
-    .items { margin-top: 16px; text-align: left; }
-    .total { margin-top: 16px; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="receipt">
-    <div class="success">🧾 Digital Receipt</div>
-    <div class="order">Order ID: <b>${orderId}</b></div>
-    <div class="items">
-      <div>Items:</div>
-      <ul>
-        ${order.items.map(item => `<li>${item.name} x${item.quantity} - $${item.price * item.quantity}</li>`).join('')}
-      </ul>
-    </div>
-    <div class="total">Total Paid: $${order.total}</div>
-    <div style="margin-top:24px; color:#555;">Thank you for shopping with CommerceBridge!</div>
-  </div>
-</body>
-</html>`);
-  return;
-});
-
-// WhatsApp bot status endpoint
-app.get('/api/bot/status', (req, res) => {
-  const status = whatsappBot.getStatus();
-  res.json(status);
-});
-
-// WhatsApp bot QR code endpoint
-app.get('/api/bot/qr', async (req, res) => {
-  try {
-    const qrCode = await whatsappBot.getQRCode();
-    if (!qrCode) {
-      return res.status(404).json({ error: 'QR code not available' });
-    }
-    const accept = req.headers.accept || '';
-    // If client requests image/png, return the image
-    if (accept.includes('image/png')) {
-      const base64 = qrCode.split(',')[1];
-      const imgBuffer = Buffer.from(base64, 'base64');
-      res.setHeader('Content-Type', 'image/png');
-      return res.send(imgBuffer);
-    }
-    // If client requests HTML or is a browser, render an HTML page with the QR code image
-    if (accept.includes('text/html') || accept === '' || accept === '*/*') {
-      return res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp QR Code</title>
-  <style>
-    body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; background: #f9f9f9; }
-    h1 { color: #25d366; }
-    img { margin-top: 24px; border-radius: 8px; }
-    .note { margin-top: 16px; color: #555; }
-  </style>
-</head>
-<body>
-  <h1>Scan WhatsApp QR Code</h1>
-  <img src="${qrCode}" alt="WhatsApp QR Code" width="320" height="320" />
-  <div class="note">Open WhatsApp &rarr; Menu &rarr; Linked Devices &rarr; Scan QR</div>
-</body>
-</html>`);
-    }
-    // Otherwise, return the data URL as JSON
-    res.json({ qrCode });
-    return;
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to generate QR code' });
-    return;
-  }
-});
-
-// Session management endpoints
-app.get('/api/bot/sessions', async (req, res) => {
-  try {
-    const sessions = await whatsappBot.listSessions();
-    res.json({ sessions });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to list sessions' });
-  }
-});
-
-app.delete('/api/bot/sessions/:sessionName', async (req, res) => {
-  try {
-    const { sessionName } = req.params;
-    await whatsappBot.deleteSession(sessionName);
-    res.json({ message: 'Session deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete session' });
-  }
-});
-
-app.post('/api/bot/logout', async (req, res) => {
-  try {
-    await whatsappBot.logout();
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to logout' });
-  }
-});
+app.use('/api/bot', botRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -301,16 +319,50 @@ async function startServer() {
     await databaseService.connect();
     console.log('✅ Database connected successfully');
 
-    // Initialize WhatsApp bot
-    await whatsappBot.initialize();
-    console.log('✅ WhatsApp bot initialized');
+    // Initialize WhatsApp bot (non-blocking)
+    whatsappBot.initialize().then(() => {
+      console.log('✅ WhatsApp bot initialized');
+    }).catch((error) => {
+      console.error('❌ WhatsApp bot initialization failed:', error);
+    });
+
+    // Wait for WhatsApp bot to be ready (connected) with timeout
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.log('⚠️ WhatsApp bot connection timeout - starting server anyway');
+        resolve();
+      }, 30000); // 30 second timeout
+
+      if (whatsappBot.isReady()) {
+        clearTimeout(timeout);
+        resolve();
+      } else {
+        whatsappBot.once('ready', () => {
+          clearTimeout(timeout);
+          console.log('✅ WhatsApp bot is now connected and ready!');
+          resolve();
+        });
+        // Also handle QR code generation
+        whatsappBot.once('qr', () => {
+          console.log('📱 QR Code generated - scan to connect WhatsApp');
+        });
+      }
+    });
 
     // Start server
     server.listen(PORT, () => {
       console.log(`🚀 CommerceBridge server running on port ${PORT}`);
-      console.log(`📱 WhatsApp bot is ready to receive messages`);
+      if (whatsappBot.isReady()) {
+        console.log(`📱 WhatsApp bot is ready to receive messages`);
+      } else {
+        console.log(`📱 WhatsApp bot waiting for QR code scan`);
+      }
       console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`📊 Detailed health: http://localhost:${PORT}/health/detailed`);
+      console.log(`✅ Readiness probe: http://localhost:${PORT}/ready`);
+      console.log(`💓 Liveness probe: http://localhost:${PORT}/live`);
       console.log(`📊 Bot status: http://localhost:${PORT}/api/bot/status`);
+      console.log(`📱 QR Code: http://localhost:${PORT}/api/bot/qr`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -342,3 +394,4 @@ process.on('SIGINT', async () => {
 // Start the server
 startServer();
 export { whatsappBot };
+

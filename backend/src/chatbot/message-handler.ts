@@ -1,11 +1,5 @@
-import { Message, MessageMedia } from 'whatsapp-web.js';
-
-export interface ProcessedMessage {
-  type: 'text' | 'image' | 'document' | 'audio' | 'video' | 'location' | 'contact' | 'unknown';
-  content: string;
-  media?: MessageMedia;
-  metadata?: Record<string, any>;
-}
+import { Message } from 'whatsapp-web.js';
+import { CommandParseResult, ProcessedMessage, ProductInfo } from '../types';
 
 export class MessageHandler {
   
@@ -177,13 +171,8 @@ export class MessageHandler {
   }
 
   // Extract product information from text
-  extractProductInfo(text: string): {
-    name?: string;
-    price?: number;
-    category?: string;
-    description?: string;
-  } {
-    const result: any = {};
+  extractProductInfo(text: string): ProductInfo {
+    const result: ProductInfo = {};
     
     // Extract price (look for currency symbols and numbers)
     const priceMatch = text.match(/\$?(\d+(?:\.\d{2})?)/);
@@ -246,7 +235,7 @@ export class MessageHandler {
   }
 
   // Parse command
-  parseCommand(text: string): { command: string; args: string[] } {
+  parseCommand(text: string): CommandParseResult {
     const parts = text.slice(1).split(' ');
     return {
       command: parts[0].toLowerCase(),

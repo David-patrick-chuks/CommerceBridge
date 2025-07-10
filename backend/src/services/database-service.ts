@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { createClient, RedisClientType } from 'redis';
+import { DatabaseConnectionStatus, DatabaseHealthCheck } from '../types';
 
 export class DatabaseService {
   private mongoConnection: typeof mongoose | null = null;
@@ -113,11 +114,8 @@ export class DatabaseService {
   }
 
   // Health check
-  async healthCheck(): Promise<{
-    mongodb: boolean;
-    redis: boolean;
-  }> {
-    const health = {
+  async healthCheck(): Promise<DatabaseHealthCheck> {
+    const health: DatabaseHealthCheck = {
       mongodb: false,
       redis: false
     };
@@ -143,10 +141,7 @@ export class DatabaseService {
   }
 
   // Get connection status
-  getConnectionStatus(): {
-    mongodb: boolean;
-    redis: boolean;
-  } {
+  getConnectionStatus(): DatabaseConnectionStatus {
     return {
       mongodb: this.mongoConnection !== null,
       redis: this.redisClient !== null

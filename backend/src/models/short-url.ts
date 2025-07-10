@@ -1,12 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
-
-export interface ShortUrlDocument extends Document {
-  code: string;
-  targetUrl: string;
-  createdAt: Date;
-  createdBy?: string;
-  expiresAt?: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { ShortUrlDocument } from '../types/models.types';
 
 const ShortUrlSchema = new Schema<ShortUrlDocument>({
   code: { type: String, required: true, unique: true },

@@ -1,31 +1,5 @@
 import { UserModel } from '../models/user';
-
-export interface UserSession {
-  userId: string;
-  phoneNumber: string;
-  userType: 'customer' | 'seller' | 'unknown';
-  currentState: string;
-  context: Record<string, any>;
-  lastActivity: Date;
-  isActive: boolean;
-  cart?: CartItem[];
-  orderHistory?: string[];
-  preferences?: UserPreferences;
-  needsAccount?: boolean;
-}
-
-export interface CartItem {
-  productId: string;
-  quantity: number;
-  price: number;
-  name: string;
-}
-
-export interface UserPreferences {
-  language: string;
-  currency: string;
-  notifications: boolean;
-}
+import { CartItem, UserPreferences, UserSession } from '../types';
 
 export class ChatSession {
   private sessions: Map<string, UserSession> = new Map();
@@ -33,6 +7,8 @@ export class ChatSession {
   async getSession(phoneNumber: string): Promise<UserSession> {
     // Normalize phone number
     phoneNumber = phoneNumber.replace(/@c\.us$/, '');
+    // Debug log: phone number being searched
+    // console.log('[SessionManager] Looking for user with phoneNumber:', phoneNumber);
     // Check if session exists
     if (this.sessions.has(phoneNumber)) {
       const session = this.sessions.get(phoneNumber)!;
@@ -45,6 +21,7 @@ export class ChatSession {
     let userType: 'customer' | 'seller' | 'unknown' = 'unknown';
     try {
       const user = await UserModel.findOne({ phoneNumber });
+      // console.log('[SessionManager] User found in DB:', user);
       needsAccount = !user;
       if (user) {
         userType = user.userType; // set userType from DB
@@ -73,8 +50,45 @@ export class ChatSession {
     };
 
     this.sessions.set(phoneNumber, newSession);
-    console.log(`📝 Created new session for ${phoneNumber}`);
+    console.log(`📝 Created new session for ${phoneNumber} (needsAccount: ${needsAccount}, userType: ${userType})`);
     return newSession;
+  }
+
+  // Force session refresh after account creation
+  async refreshSessionFromDB(phoneNumber: string): Promise<UserSession> {
+    phoneNumber = phoneNumber.replace(/@c\.us$/, '');
+    try {
+      const user = await UserModel.findOne({ phoneNumber });
+      console.log('[SessionManager] [Refresh] User found in DB:', user);
+      let userType: 'customer' | 'seller' | 'unknown' = 'unknown';
+      let needsAccount = !user;
+      if (user) {
+        userType = user.userType;
+      }
+      const refreshedSession: UserSession = {
+        userId: this.generateUserId(),
+        phoneNumber,
+        userType,
+        currentState: 'welcome',
+        context: {},
+        lastActivity: new Date(),
+        isActive: true,
+        cart: [],
+        orderHistory: [],
+        preferences: {
+          language: 'en',
+          currency: 'USD',
+          notifications: true
+        },
+        needsAccount
+      };
+      this.sessions.set(phoneNumber, refreshedSession);
+      console.log(`[SessionManager] Refreshed session for ${phoneNumber} (needsAccount: ${needsAccount}, userType: ${userType})`);
+      return refreshedSession;
+    } catch (err) {
+      console.error('❌ Failed to refresh session from DB:', err);
+      return await this.getSession(phoneNumber);
+    }
   }
 
   async updateSession(phoneNumber: string, session: UserSession): Promise<void> {

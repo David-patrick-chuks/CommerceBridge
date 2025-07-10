@@ -1,22 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
-
-export interface OrderItem {
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-export interface OrderDocument extends Document {
-  orderId: string;
-  user: string;
-  phoneNumber: string;
-  total: number;
-  paid: boolean;
-  items: OrderItem[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { OrderDocument, OrderItem } from '../types/models.types';
 
 const OrderItemSchema = new Schema<OrderItem>({
   productId: { type: String, required: true },

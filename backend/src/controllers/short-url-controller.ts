@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ShortUrlModel } from '../models/short-url';
+import { CreateShortUrlRequest, ShortUrlResponse, ValidateShortUrlResponse } from '../types';
 
 function generateCode(length = 7) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -11,7 +12,7 @@ function generateCode(length = 7) {
 }
 
 export const createShortUrl = async (req: Request, res: Response) => {
-  const { url, createdBy, expiryMinutes } = req.body;
+  const { url, createdBy, expiryMinutes }: CreateShortUrlRequest = req.body;
   if (!url) {
     return res.status(400).json({ error: 'Missing url' });
   }
@@ -32,7 +33,11 @@ export const createShortUrl = async (req: Request, res: Response) => {
   await shortUrl.save();
   // Construct the full short URL (assume production base URL is set in env, fallback to localhost)
   const base = process.env.SHORTENER_BASE_URL || 'http://localhost:3001/api';
-  return res.json({ shortUrl: `${base}/s/${code}`, expiresAt });
+  const response: ShortUrlResponse = {
+    shortUrl: `${base}/s/${code}`,
+    expiresAt
+  };
+  return res.json(response);
 };
 
 export const redirectShortUrl = async (req: Request, res: Response) => {
@@ -51,10 +56,17 @@ export const validateShortUrl = async (req: Request, res: Response) => {
   const { code } = req.params;
   const shortUrl = await ShortUrlModel.findOne({ code });
   if (!shortUrl) {
-    return res.status(404).json({ valid: false, reason: 'not_found' });
+    const response: ValidateShortUrlResponse = { valid: false, reason: 'not_found' };
+    return res.status(404).json(response);
   }
   if (shortUrl.expiresAt && shortUrl.expiresAt.getTime() < Date.now()) {
-    return res.status(410).json({ valid: false, reason: 'expired', expiresAt: shortUrl.expiresAt });
+    const response: ValidateShortUrlResponse = { 
+      valid: false, 
+      reason: 'expired', 
+      expiresAt: shortUrl.expiresAt 
+    };
+    return res.status(410).json(response);
   }
-  return res.json({ valid: true, expiresAt: shortUrl.expiresAt });
+  const response: ValidateShortUrlResponse = { valid: true, expiresAt: shortUrl.expiresAt };
+  return res.json(response);
 }; 

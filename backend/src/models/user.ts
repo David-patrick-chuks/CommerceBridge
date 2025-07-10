@@ -1,18 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
-
-export interface UserDocument extends Document {
-  phoneNumber: string;
-  name: string;
-  email: string;
-  userType: 'customer' | 'seller';
-  profileImage?: string; // URL or path
-  storeName?: string;
-  storeDescription?: string;
-  storeAddress?: string;
-  storeCategories?: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { UserDocument } from '../types/models.types';
 
 const UserSchema = new Schema<UserDocument>({
   phoneNumber: { type: String, required: true, unique: true },

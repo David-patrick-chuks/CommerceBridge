@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import { CloudinaryUploadResult } from '../types';
 
 dotenv.config();
 
@@ -9,7 +10,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadImage = async (filePath: string) => {
+export const uploadImage = async (filePath: string): Promise<CloudinaryUploadResult> => {
   return cloudinary.uploader.upload(filePath, {
     folder: 'commercebridge/users',
     resource_type: 'image',

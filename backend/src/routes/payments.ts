@@ -1,10 +1,13 @@
 import { Router } from 'express';
+import { dummyPaymentConfirm, dummyPaymentPage, dummyPaymentReceipt } from '../controllers/payment-controller';
 
 const router = Router();
 
-// Placeholder routes - will be implemented later
-router.get('/status', (req, res) => {
-  res.json({ message: 'Payments routes placeholder' });
-});
+// Dummy payment page
+router.get('/pay/dummy/:orderId', dummyPaymentPage);
+// Dummy payment confirmation
+router.post('/pay/dummy/:orderId/confirm', dummyPaymentConfirm);
+// Digital receipt
+router.get('/pay/dummy/:orderId/receipt', dummyPaymentReceipt);
 
 export default router; 
