@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+torch
+clip-by-openai
+pymongo
+pillow
+nltk
+scikit-learn
+python-dotenv
+numpy 
