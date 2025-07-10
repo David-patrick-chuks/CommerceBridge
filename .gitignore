@@ -52,3 +52,5 @@ Thumbs.db
 
 # Ignore by pattern
 # docs/generated/ 
+
+.cursorrules
