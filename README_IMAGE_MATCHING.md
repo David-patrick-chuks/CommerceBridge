@@ -3,7 +3,7 @@
 > **This document is a technical deep-dive. For a high-level overview, see the main [README.md](./README.md) and [PROJECT_VISION.md](./PROJECT_VISION.md).**
 
 ## Overview
-CommerceBridge enables sellers to upload product images and customers to find products by uploading their own images via WhatsApp. The system uses OpenAI CLIP for image embeddings, a hybrid Retrieval-Augmented Generation (RAG) system for search, and MongoDB Atlas for vector and keyword search. This feature is a core differentiator of CommerceBridge and is fully integrated with the WhatsApp-first shopping experience (via WhatsApp Web JS, not WhatsApp Business API).
+CommerceBridge is the first AI-powered WhatsApp marketplace, enabling sellers to upload product images and customers to find products by uploading their own images via WhatsApp. The system uses OpenAI CLIP for image embeddings, a hybrid Retrieval-Augmented Generation (RAG) system for search, and MongoDB Atlas for vector and keyword search. This feature is a core differentiator of CommerceBridge and is fully integrated with the WhatsApp-first shopping experience (via WhatsApp Web JS, not WhatsApp Business API).
 
 ---
 
@@ -35,8 +35,8 @@ commerce-bridge/
 ## Architecture
 - **Node.js WhatsApp Bot** (`backend/`):
   - Handles WhatsApp interactions, receives images and product details from sellers, and images from customers.
-  - Communicates with the Python FastAPI server for embedding and search.
-- **Python FastAPI Server** (`clip-server/`):
+  - Communicates with the Python FastAPI server (clip-server) for embedding and search.
+- **Python FastAPI Server (clip-server/)**:
   - Runs CLIP for image embedding.
   - Implements hybrid RAG search and deduplication.
   - Connects to MongoDB Atlas for storage and retrieval.
@@ -96,7 +96,7 @@ commerce-bridge/
 }
 ```
 
-### 2. Python FastAPI Server (`clip-server/`)
+### 2. Python FastAPI Server (clip-server/)
 - Place all Python code for CLIP embedding and RAG search in this directory.
 - Install dependencies:
   ```bash
@@ -144,6 +144,7 @@ commerce-bridge/
 - Monitor MongoDB Atlas for performance and deduplication.
 - Consider production hardening (security, error handling, scaling).
 - WhatsApp Web JS is used for integration (not WhatsApp Business API).
+- **clip-server** is a dedicated AI service for image search, matching, and deduplication.
 
 ---
 

@@ -2,9 +2,9 @@
 
 ## 🎯 The Big Idea
 
-**CommerceBridge = Jumia on WhatsApp**
+**CommerceBridge: The First AI-Powered WhatsApp Marketplace**
 
-Imagine ordering from Jumia, but instead of using their website or app, you do everything through WhatsApp chat with a smart bot. That's CommerceBridge!
+Imagine a world where you can shop, sell, and manage your business entirely through WhatsApp, guided by a smart AI bot. That's CommerceBridge!
 
 ## 🚀 Core Concept
 
@@ -55,6 +55,7 @@ Imagine ordering from Jumia, but instead of using their website or app, you do e
 - **Real-time updates** - Instant notifications
 - **AI-powered image search and matching** - Find and add products using images
 - **WhatsApp Web JS integration** - No reliance on WhatsApp Business API
+- **clip-server** - Dedicated AI server for image search, matching, and deduplication
 
 ### 🆚 vs Traditional E-commerce:
 | Traditional | CommerceBridge |
@@ -137,6 +138,7 @@ CommerceBridge will democratize e-commerce by making it accessible to anyone wit
 - **AI-powered image search and matching**
 - **Hybrid RAG search and deduplication**
 - **Secure, scalable WhatsApp Web JS integration**
+- **clip-server for advanced AI image search and matching**
 
 ---
 

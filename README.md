@@ -6,7 +6,7 @@ A personalized online store solution that integrates seamlessly with WhatsApp, e
 
 ## 🎯 Overview
 
-CommerceBridge is a **WhatsApp-first e-commerce platform** where customers and sellers interact entirely through a smart chatbot interface. Think of it as "Jumia on WhatsApp" - everything happens within WhatsApp conversations, from browsing products to completing orders. The CommerceBridge bot serves as the middleman, handling all transactions and communications between customers and sellers without direct contact.
+CommerceBridge is the **first AI-powered WhatsApp marketplace** where customers and sellers interact entirely through a smart chatbot interface. Everything happens within WhatsApp conversations, from browsing products to completing orders. The CommerceBridge bot serves as the middleman, handling all transactions and communications between customers and sellers without direct contact.
 
 **Key Concept**: No separate website or app needed - the entire e-commerce experience happens through WhatsApp chat!
 
@@ -14,6 +14,7 @@ CommerceBridge is a **WhatsApp-first e-commerce platform** where customers and s
 - **Vision & Philosophy:** [PROJECT_VISION.md](./PROJECT_VISION.md)
 - **Main Features & Setup:** (this README)
 - **AI Image Matching & Architecture:** [README_IMAGE_MATCHING.md](./README_IMAGE_MATCHING.md)
+- **CLIP Server & Hybrid Search:** [clip-server/README.md](./clip-server/README.md)
 
 ## 🚀 Key Features
 
@@ -26,6 +27,7 @@ CommerceBridge is a **WhatsApp-first e-commerce platform** where customers and s
 - ✅ **Seller Management**: Upload products, manage inventory, and track sales via WhatsApp
 - ✅ **Profile Creation**: Web link for account setup (only non-WhatsApp interaction)
 - ✅ **Digital Receipt as Image**: After payment, customers receive a digital receipt image via WhatsApp
+- ✅ **AI-Powered Image Search & Matching**: Find and add products using images, powered by the clip-server
 
 ### Advanced & Planned Features
 - 📦 **Order Status Notifications**
@@ -87,7 +89,7 @@ commerce-bridge/
 ├── frontend/                # React frontend application (web interface)
 │   └── src/
 │       └── ...
-├── clip-server/             # Python FastAPI server for CLIP embedding & RAG search
+├── clip-server/             # Python FastAPI server for CLIP embedding & hybrid RAG search
 │   ├── app/
 │   └── ...
 ├── shared/                  # Shared types and utilities
@@ -111,6 +113,12 @@ commerce-bridge/
 - **WhatsApp Web JS** for WhatsApp integration (**not WhatsApp Business API**)
 - **Paystack SDK** for payment processing
 
+### CLIP Server (AI Image Matching)
+- **Python FastAPI** server (clip-server/)
+- **OpenAI CLIP** for image embeddings
+- **Hybrid RAG search** for product matching
+- **MongoDB Atlas** for vector and keyword search
+
 ### Database
 - **PostgreSQL** for primary data storage
 - **MongoDB** for real-time features and analytics
@@ -129,6 +137,7 @@ Before you begin, ensure you have the following installed:
 - PostgreSQL (v14 or higher)
 - MongoDB (v6 or higher)
 - Redis (v6 or higher)
+- Python 3.8+ (for clip-server)
 
 ## 🚀 Quick Start
 
@@ -150,7 +159,7 @@ npm install
 ```
 
 ### 3. Environment Setup
-Create environment files for both backend and frontend:
+Create environment files for each service as needed:
 
 #### Backend (.env)
 ```env
@@ -199,6 +208,12 @@ REACT_APP_API_URL=http://localhost:3001/api
 REACT_APP_WHATSAPP_NUMBER=+1234567890
 REACT_APP_PAYSTACK_PUBLIC_KEY=your-paystack-public-key
 REACT_APP_GOOGLE_ANALYTICS_ID=your-ga-id
+```
+
+#### CLIP Server (.env)
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/commercebridge
+# Add any other variables required by clip-server/app/main.py
 ```
 
 ### 4. Database Setup
@@ -253,6 +268,9 @@ commerce-bridge/
 │   │   ├── utils/           # Utility functions
 │   │   └── types/           # TypeScript types
 │   └── public/              # Static assets
+├── clip-server/             # Python FastAPI server for CLIP embedding & RAG search
+│   ├── app/
+│   └── ...
 ├── shared/                  # Shared types and utilities
 ├── docs/                    # Documentation
 └── scripts/                 # Build and deployment scripts
