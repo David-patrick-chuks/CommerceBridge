@@ -10,10 +10,12 @@ import morgan from 'morgan';
 // Import services
 import { WhatsAppBot } from './chatbot/whatsapp-bot';
 import { DatabaseService } from './services/database-service';
+import { schedulerService } from './services/scheduler-service';
 
 // Import routes
 import authRoutes from './routes/auth';
 import botRoutes from './routes/bot';
+import notificationRoutes from './routes/notifications';
 import orderRoutes from './routes/orders';
 import paymentRoutes from './routes/payments';
 import productRoutes from './routes/products';
@@ -295,6 +297,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/pay', paymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api', shortUrlRoutes);
 app.use('/api/bot', botRoutes);
 
@@ -325,6 +328,9 @@ async function startServer() {
     }).catch((error) => {
       console.error('❌ WhatsApp bot initialization failed:', error);
     });
+
+    // Start scheduled tasks
+    schedulerService.startScheduledTasks();
 
     // Wait for WhatsApp bot to be ready (connected) with timeout
     await new Promise<void>((resolve, reject) => {
@@ -363,6 +369,7 @@ async function startServer() {
       console.log(`💓 Liveness probe: http://localhost:${PORT}/live`);
       console.log(`📊 Bot status: http://localhost:${PORT}/api/bot/status`);
       console.log(`📱 QR Code: http://localhost:${PORT}/api/bot/qr`);
+      console.log(`🔔 Notification API: http://localhost:${PORT}/api/notifications`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -373,6 +380,7 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 Received SIGTERM, shutting down gracefully...');
+  schedulerService.stopScheduledTasks();
   await whatsappBot.disconnect();
   await databaseService.disconnect();
   server.close(() => {
@@ -383,6 +391,7 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   console.log('🛑 Received SIGINT, shutting down gracefully...');
+  schedulerService.stopScheduledTasks();
   await whatsappBot.disconnect();
   await databaseService.disconnect();
   server.close(() => {

@@ -28,6 +28,7 @@ CommerceBridge is the **first AI-powered WhatsApp marketplace** where customers 
 - ✅ **Profile Creation**: Web link for account setup (only non-WhatsApp interaction)
 - ✅ **Digital Receipt as Image**: After payment, customers receive a digital receipt image via WhatsApp
 - ✅ **AI-Powered Image Search & Matching**: Find and add products using images, powered by the clip-server
+- ✅ **Gemini AI Support**: Intelligent customer support with automatic escalation to human agents
 
 ### Advanced & Planned Features
 - 📦 **Order Status Notifications**
@@ -195,6 +196,10 @@ AWS_S3_BUCKET=your-bucket-name
 # Email Configuration
 SENDGRID_API_KEY=your-sendgrid-key
 FROM_EMAIL=noreply@commercebridge.com
+
+# Support Configuration
+SUPPORT_EMAIL=support@commercebridge.com
+SUPPORT_PHONE=+234-XXX-XXX-XXXX
 
 # Server Configuration
 PORT=3001

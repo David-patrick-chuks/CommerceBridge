@@ -40,4 +40,38 @@ export interface UserDocument extends Document {
   storeCategories?: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UnknownUserDocument extends Document {
+  phoneNumber: string;
+  firstMessage: string;
+  firstMessageTime: Date;
+  messageCount: number;
+  lastMessageTime: Date;
+  userAgent?: string;
+  deviceInfo?: string;
+  location?: string;
+  isConverted: boolean;
+  convertedTo?: 'customer' | 'seller';
+  convertedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface NotificationDocument extends Document {
+  phoneNumber: string;
+  userType: 'customer' | 'seller' | 'unknown' | 'general';
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'promotional';
+  category: 'order' | 'payment' | 'product' | 'system' | 'promotional' | 'support';
+  isRead: boolean;
+  isSent: boolean;
+  sentAt?: Date;
+  readAt?: Date;
+  scheduledFor?: Date;
+  expiresAt?: Date;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
 } 

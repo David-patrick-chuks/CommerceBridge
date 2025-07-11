@@ -6,6 +6,8 @@ import { chatSession } from '../chatbot/session-manager';
 import { STORE_CATEGORIES } from '../constants/categories';
 import { UserModel } from '../models/user';
 import { uploadImage } from '../services/cloudinary-service';
+import { notificationService } from '../services/notification-service';
+import { unknownUserService } from '../services/unknown-user-service';
 import { CreateUserRequest, StoreCategoriesResponse } from '../types';
 import { generateWelcomeBanner } from '../utils/banner-generator';
 // Assume whatsappClient is imported or passed in
@@ -47,6 +49,33 @@ export const createOrUpdateUser = async (req: Request, res: Response, whatsappCl
       { name, email, userType, profileImage, storeName, storeDescription, storeAddress, storeCategories },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+
+    // Mark unknown user as converted if they existed
+    try {
+      await unknownUserService.markAsConverted(phoneNumber, userType);
+      console.log(`✅ Marked unknown user ${phoneNumber} as converted to ${userType}`);
+    } catch (err) {
+      console.error('❌ Failed to mark unknown user as converted:', err);
+    }
+
+    // Send welcome notification based on user type
+    try {
+      const templates = notificationService.getNotificationTemplates();
+      const template = userType === 'customer' ? templates.customer.welcome : templates.seller.welcome;
+      
+      await notificationService.createNotification({
+        phoneNumber,
+        userType,
+        title: template.title,
+        message: template.message,
+        type: template.type,
+        category: 'system'
+      });
+      console.log(`✅ Sent welcome notification to ${phoneNumber}`);
+    } catch (err) {
+      console.error('❌ Failed to send welcome notification:', err);
+    }
+
     // If a session exists for this phoneNumber, clear needsAccount
     const session = await chatSession.getSession(phoneNumber);
     if (session && session.needsAccount) {

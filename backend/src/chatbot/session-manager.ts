@@ -1,10 +1,11 @@
-import { UserModel } from '../models/user';
+import { UserModel } from '../models';
+import { unknownUserService } from '../services/unknown-user-service';
 import { CartItem, UserPreferences, UserSession } from '../types';
 
 export class ChatSession {
   private sessions: Map<string, UserSession> = new Map();
 
-  async getSession(phoneNumber: string): Promise<UserSession> {
+  async getSession(phoneNumber: string, firstMessage?: string): Promise<UserSession> {
     // Normalize phone number
     phoneNumber = phoneNumber.replace(/@c\.us$/, '');
     // Debug log: phone number being searched
@@ -25,6 +26,19 @@ export class ChatSession {
       needsAccount = !user;
       if (user) {
         userType = user.userType; // set userType from DB
+      } else if (firstMessage) {
+        // Save unknown user data on first message
+        try {
+          await unknownUserService.createOrUpdateUnknownUser({
+            phoneNumber,
+            firstMessage,
+            userAgent: 'WhatsApp Web',
+            deviceInfo: 'WhatsApp'
+          });
+          console.log(`📝 Saved unknown user data for ${phoneNumber}`);
+        } catch (err) {
+          console.error('❌ Failed to save unknown user data:', err);
+        }
       }
     } catch (err) {
       console.error('❌ Failed to check user existence in MongoDB:', err);

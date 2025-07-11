@@ -27,9 +27,20 @@ export class ConversationFlow {
     try {
       // Onboarding: If needsAccount, show onboarding welcome and ask for role first
       if (session.needsAccount) {
-        if (session.currentState !== 'onboarding') {
+        if (session.currentState !== 'onboarding' && session.currentState !== 'support_mode') {
           session.currentState = 'onboarding';
         }
+        return await this.onboardingFlow.handleOnboarding(message, session, client);
+      }
+
+      // Handle support states first
+      if (session.currentState === 'customer_support') {
+        return await this.customerFlow.handleCustomerSupport(message, session);
+      }
+      if (session.currentState === 'seller_support') {
+        return await this.sellerFlow.handleSellerSupport(message, session);
+      }
+      if (session.currentState === 'support_mode') {
         return await this.onboardingFlow.handleOnboarding(message, session, client);
       }
 
@@ -89,3 +100,4 @@ export class ConversationFlow {
 
 // Import formatting functions for error message
 import { formatWhatsAppBold, formatWhatsAppItalic } from '../utils/text-formatter';
+

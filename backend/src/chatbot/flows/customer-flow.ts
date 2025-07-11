@@ -1,7 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { OrderModel } from '../../models/order';
+import { notificationService } from '../../services/notification-service';
 import { StaticProduct } from '../../types';
 import { CartItem, UserSession } from '../../types/session.types';
+import { SupportMessages, supportService } from '../../utils/gemini/index';
 import { formatMonospace, formatWhatsAppBold, formatWhatsAppItalic } from '../../utils/text-formatter';
 
 export class CustomerFlow {
@@ -38,9 +40,43 @@ ${formatWhatsAppItalic('Type the number or describe what you need!')}`;
     } else if (messageText.includes('4') || messageText.includes('order')) {
       return await this.getOrderHistory(session);
     } else if (messageText.includes('5') || messageText.includes('help')) {
-      return this.getCustomerHelp();
+      session.currentState = 'customer_support';
+      return `${formatWhatsAppBold('🆘 Customer Support')}\n\n${formatWhatsAppItalic('I\'m here to help! Please ask your question and I\'ll do my best to assist you.')}\n\n${formatWhatsAppItalic('For urgent issues, I\'ll automatically escalate to our human support team.')}\n\n${formatWhatsAppItalic('Type "back" to return to the main menu.')}`;
     } else {
       return `${formatWhatsAppBold("I didn't understand.")} Please choose from the menu:\n\n${this.customerMenu}`;
+    }
+  }
+
+  async handleCustomerSupport(message: any, session: UserSession): Promise<string> {
+    const userQuestion = message.body.trim();
+    
+    // Handle navigation back to main menu
+    if (userQuestion.toLowerCase() === 'back') {
+      session.currentState = 'customer_main';
+      return this.customerMenu;
+    }
+
+    // Check if question should be escalated to human support
+    const shouldEscalate = await supportService.shouldEscalateToHuman(userQuestion, 'customer');
+    
+    if (shouldEscalate) {
+      // Escalate to human support
+      session.currentState = 'escalated_support';
+      return SupportMessages.getEscalationMessage();
+    }
+
+    // Use Gemini to generate AI response
+    try {
+      const aiResponse = await supportService.handleSupportQuestion(
+        userQuestion, 
+        'customer', 
+        session.phoneNumber
+      );
+      
+      return SupportMessages.wrapAiResponse(aiResponse);
+    } catch (error) {
+      console.error('Error handling support question:', error);
+      return SupportMessages.getSupportErrorMessage();
     }
   }
 
@@ -51,6 +87,21 @@ ${formatWhatsAppItalic('Type the number or describe what you need!')}`;
       if (product) {
         if (!session.cart) session.cart = [];
         session.cart.push({ productId: String(product.id), name: product.name, price: product.price, quantity: 1 });
+        
+        // Send notification for product added to cart
+        try {
+          await notificationService.createNotification({
+            phoneNumber: session.phoneNumber,
+            userType: 'customer',
+            title: 'Product Added to Cart',
+            message: `${product.name} has been added to your cart. Continue shopping or proceed to checkout!`,
+            type: 'success',
+            category: 'product'
+          });
+        } catch (err) {
+          console.error('❌ Failed to send cart notification:', err);
+        }
+        
         return `${formatWhatsAppBold(`✅ ${product.name} added to your cart!`)}\n\n${formatWhatsAppItalic('Type "view cart" to see your cart, or another product number to add more.')}`;
       }
     }
@@ -145,10 +196,6 @@ ${formatWhatsAppItalic('Type the number or describe what you need!')}`;
     }
   }
 
-  private getCustomerHelp(): string {
-    return `${formatWhatsAppBold('🆘 Customer Support')}\n\n${formatWhatsAppItalic('Need help? Here\'s what I can assist with:')}\n\n• Product questions\n• Order tracking\n• Payment issues\n• Returns & refunds\n• General inquiries\n\n${formatWhatsAppItalic('Type your question or "back" to return to menu.')}`;
-  }
-
   private removeFromCart(messageText: string, session: UserSession): string {
     return `${formatWhatsAppBold('🗑️ Removed from Cart')}\n\nItem has been removed from your cart.\n\n${formatWhatsAppItalic('Type "view cart" to see your updated cart or "back" to return to menu.')}`;
   }
@@ -172,6 +219,20 @@ ${formatWhatsAppItalic('Type the number or describe what you need!')}`;
         paid: false,
         items: cart.map((item: CartItem) => ({ ...item }))
       });
+
+      // Send order confirmation notification
+      try {
+        await notificationService.createNotification({
+          phoneNumber: session.phoneNumber,
+          userType: 'customer',
+          title: 'Order Confirmed!',
+          message: `Your order #${orderId} has been created successfully. Total: $${total}. Please complete your payment to confirm the order.`,
+          type: 'success',
+          category: 'order'
+        });
+      } catch (err) {
+        console.error('❌ Failed to send order confirmation notification:', err);
+      }
     } catch (err) {
       console.error('❌ Failed to save order to MongoDB:', err);
     }

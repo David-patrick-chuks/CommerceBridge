@@ -2,6 +2,7 @@ import axios from 'axios';
 import path from 'path';
 import { MessageMedia } from 'whatsapp-web.js';
 import { UserSession } from '../../types/session.types';
+import { SupportMessages, supportService } from '../../utils/gemini/index';
 import { formatCode, formatMonospace, formatWhatsAppBold, formatWhatsAppItalic } from '../../utils/text-formatter';
 
 export class OnboardingFlow {
@@ -42,6 +43,11 @@ Type *1* for Customer or *2* for Seller`;
   async handleOnboarding(message: any, session: UserSession, client: any): Promise<string | null> {
     const messageText = message.body.toLowerCase().trim();
     
+    // Handle support state - if user is in support mode, process their question
+    if (session.currentState === 'support_mode') {
+      return await this.handleSupportQuestion(message, session);
+    }
+    
     // Handle onboarding response
     if (messageText.includes('1') || messageText.includes('customer')) {
       session.userType = 'customer';
@@ -59,7 +65,8 @@ Type *1* for Customer or *2* for Seller`;
     }
     // Handle Contact Support
     if (messageText.trim() === '4' || messageText.includes('support')) {
-      return this.getOnboardingSupport();
+      session.currentState = 'support_mode';
+      return `${formatWhatsAppBold('🛟 Contact Support')}\n\n${formatWhatsAppItalic('I\'m here to help! Please ask your question and I\'ll do my best to assist you.')}\n\n${formatWhatsAppItalic('For urgent issues, I\'ll automatically escalate to our human support team.')}\n\n${formatWhatsAppItalic('Type "back" to return to the main menu.')}`;
     }
     if (messageText.includes('create account') || messageText.includes('signup') || messageText.includes('register')) {
       const phone = session.phoneNumber.replace(/@c\.us$/, '');
@@ -83,6 +90,42 @@ Type *1* for Customer or *2* for Seller`;
     console.log('[Onboarding] Sending onboarding image with caption (no buttons, buttons deprecated)');
     await client.sendMessage(message.from, media, { caption: this.onboardingWelcome });
     return null;
+  }
+
+  private async handleSupportQuestion(message: any, session: UserSession): Promise<string> {
+    const userQuestion = message.body.trim();
+    
+    // Handle navigation back to main menu
+    if (userQuestion.toLowerCase() === 'back') {
+      session.currentState = 'onboarding';
+      return this.onboardingWelcome;
+    }
+
+    // Convert session userType to Gemini UserType (filter out 'unknown')
+    const userType = session.userType === 'unknown' ? undefined : session.userType as 'customer' | 'seller';
+
+    // Check if question should be escalated to human support
+    const shouldEscalate = await supportService.shouldEscalateToHuman(userQuestion, userType);
+    
+    if (shouldEscalate) {
+      // Escalate to human support
+      session.currentState = 'escalated_support';
+      return SupportMessages.getEscalationMessage();
+    }
+
+    // Use Gemini to generate AI response
+    try {
+      const aiResponse = await supportService.handleSupportQuestion(
+        userQuestion, 
+        userType, 
+        session.phoneNumber
+      );
+      
+      return SupportMessages.wrapAiResponse(aiResponse);
+    } catch (error) {
+      console.error('Error handling support question:', error);
+      return SupportMessages.getSupportErrorMessage();
+    }
   }
 
   private getOnboardingFAQs(): string {

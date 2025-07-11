@@ -135,7 +135,7 @@ export class WhatsAppBot extends EventEmitter {
       console.log(`📨 Received message from ${message.from}: ${message.body}`);
 
       // Get or create session for this user
-      const session = await this.sessionManager.getSession(message.from);
+      const session = await this.sessionManager.getSession(message.from, message.body);
       
       // Handle the message based on conversation flow
       const response = await this.conversationFlow.processMessage(message, session, this.client);
