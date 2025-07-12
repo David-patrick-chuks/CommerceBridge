@@ -14,7 +14,9 @@
     "migrate": "ts-node src/database/migrate.ts",
     "seed": "ts-node src/database/seed.ts",
     "test:gemini": "ts-node ./tests/test-gemini-support.ts",
-    "test:notifications": "node test-notification-system.js"
+    "test:notifications": "ts-node ./tests/test-notification-system.ts",
+    "test:image-handling": "ts-node ./tests/test-image-handling.ts",
+    "test:image-handling:standalone": "ts-node ./tests/test-image-handling.ts --standalone"
   },
   "keywords": [
     "whatsapp",

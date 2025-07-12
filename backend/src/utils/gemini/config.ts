@@ -8,16 +8,25 @@ import 'dotenv/config';
 // Load and validate API keys from environment
 const loadApiKeys = (): string[] => {
   const rawKeys = process.env.GEMINI_API_KEYS || '';
-  console.log(`🔍 Debug: Raw GEMINI_API_KEYS: "${rawKeys}"`);
+  
+  // Only show debug logs if DEBUG_GEMINI is set
+  if (process.env.DEBUG_GEMINI === 'true') {
+    console.log(`🔍 Debug: Raw GEMINI_API_KEYS: "${rawKeys}"`);
+  }
   
   const apiKeys = rawKeys.split(',').filter(k => k.trim());
-  console.log(`🔍 Debug: Filtered API keys count: ${apiKeys.length}`);
-  console.log(`🔍 Debug: API keys:`, apiKeys.map((k, i) => `${i}: "${k.substring(0, 10)}..."`));
+  
+  if (process.env.DEBUG_GEMINI === 'true') {
+    console.log(`🔍 Debug: Filtered API keys count: ${apiKeys.length}`);
+    console.log(`🔍 Debug: API keys:`, apiKeys.map((k, i) => `${i}: "${k.substring(0, 10)}..."`));
+  }
   
   if (apiKeys.length === 0) {
     if (process.env.GENAI_API_KEY) {
       apiKeys.push(process.env.GENAI_API_KEY);
-      console.log(`🔍 Debug: Using GENAI_API_KEY fallback`);
+      if (process.env.DEBUG_GEMINI === 'true') {
+        console.log(`🔍 Debug: Using GENAI_API_KEY fallback`);
+      }
     } else {
       console.error("FATAL: No API keys found. Please set GEMINI_API_KEYS or GENAI_API_KEY in your .env file.");
       process.exit(1);
@@ -50,7 +59,9 @@ export class ApiKeyManager {
    */
   switchKey(): GoogleGenAI {
     this.currentIndex = (this.currentIndex + 1) % this.keys.length;
-    console.log(`🔄 Switching to API key index ${this.currentIndex}`);
+    if (process.env.DEBUG_GEMINI === 'true') {
+      console.log(`🔄 Switching to API key index ${this.currentIndex}`);
+    }
     return this.getClient();
   }
 

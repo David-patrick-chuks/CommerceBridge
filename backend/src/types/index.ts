@@ -18,3 +18,6 @@ export * from './services.types';
 // Utility Types
 export * from './utils.types';
 
+// Notification Types
+export * from './notification.types';
+

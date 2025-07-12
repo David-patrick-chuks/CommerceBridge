@@ -125,9 +125,23 @@ export class WhatsAppBot extends EventEmitter {
   }
 
   private async handleIncomingMessage(message: Message): Promise<void> {
+    // Debug: Log every incoming message event
+    console.log('[WhatsAppBot] handleIncomingMessage fired:', {
+      from: message.from,
+      type: message.type,
+      body: message.body,
+      fromMe: message.fromMe
+      
+    });
     try {
       // Skip messages from self
       if (message.fromMe) return;
+
+      // Skip status messages from status@broadcast
+      if (message.from === 'status@broadcast') {
+        console.log(`🚫 Skipping status message from ${message.from}`);
+        return;
+      }
 
       // Update last activity
       this.status.lastActivity = new Date();
@@ -217,9 +231,16 @@ export class WhatsAppBot extends EventEmitter {
           mongoose.connection.once('error', reject);
         });
       }
-      console.log('[DEBUG] About to call this.client.initialize()');
+      
+      if (process.env.DEBUG_WHATSAPP === 'true') {
+        console.log('[DEBUG] About to call this.client.initialize()');
+      }
+      
       await this.client.initialize();
-      console.log('[DEBUG] this.client.initialize() completed successfully');
+      
+      if (process.env.DEBUG_WHATSAPP === 'true') {
+        console.log('[DEBUG] this.client.initialize() completed successfully');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize WhatsApp bot:', error);
       throw error;

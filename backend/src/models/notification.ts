@@ -43,7 +43,7 @@ const NotificationSchema = new Schema<NotificationDocument>({
   sentAt: { type: Date },
   readAt: { type: Date },
   scheduledFor: { type: Date, index: true },
-  expiresAt: { type: Date, index: true },
+  expiresAt: { type: Date }, // Removed index: true to avoid duplicate
   metadata: { type: Schema.Types.Mixed },
 }, { 
   timestamps: true

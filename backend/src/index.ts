@@ -5,7 +5,6 @@ import express from 'express';
 import helmet from 'helmet';
 import { createServer } from 'http';
 import mongoose from 'mongoose'; // Added for MongoDB connection status
-import morgan from 'morgan';
 
 // Import services
 import { WhatsAppBot } from './chatbot/whatsapp-bot';
@@ -23,17 +22,19 @@ import shortUrlRoutes from './routes/short-url';
 import usersRoutes from './routes/users';
 import webhookRoutes from './routes/webhooks';
 
+import { customLogger, devLogger, prodLogger } from './middleware/logger';
+
 // Load environment variables
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const app = express();
 const server = createServer(app);
 const PORT = process.env.PORT || 3001;
 
-// Debug: Log every route registration
+// Debug: Log every route registration (only if DEBUG_ROUTES is enabled)
 const originalUse = app.use;
 app.use = function() {
-  if (typeof arguments[0] === 'string') {
+  if (process.env.DEBUG_ROUTES === 'true' && typeof arguments[0] === 'string') {
     console.log('Registering route:', arguments[0]);
   }
   // @ts-ignore: Forwarding arguments for debug logging
@@ -54,7 +55,9 @@ app.use(cors({
   credentials: true
 }));
 app.use(compression());
-app.use(morgan('combined'));
+// Use appropriate logger based on environment
+const logger = process.env.NODE_ENV === 'production' ? prodLogger : devLogger;
+app.use(logger);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 

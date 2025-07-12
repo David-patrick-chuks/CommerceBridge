@@ -49,7 +49,7 @@ export class ConversationFlow {
         return await this.handleCustomerFlow(messageText, session);
       }
       if (session.userType === 'seller') {
-        return await this.handleSellerFlow(messageText, session);
+        return await this.handleSellerFlow(message, session);
       }
       
       return this.onboardingFlow.getOnboardingWelcome();
@@ -77,16 +77,16 @@ export class ConversationFlow {
     }
   }
 
-  private async handleSellerFlow(messageText: string, session: UserSession): Promise<string> {
+  private async handleSellerFlow(message: Message, session: UserSession): Promise<string> {
     switch (session.currentState) {
       case 'seller_main':
-        return this.sellerFlow.handleSellerMain(messageText, session);
+        return this.sellerFlow.handleSellerMain(message.body, session);
       case 'adding_product':
-        return this.sellerFlow.handleAddingProduct(messageText, session);
+        return await this.sellerFlow.handleAddingProduct(message, session);
       case 'managing_products':
-        return this.sellerFlow.handleManagingProducts(messageText, session);
+        return this.sellerFlow.handleManagingProducts(message.body, session);
       case 'order_management':
-        return this.sellerFlow.handleOrderManagement(messageText, session);
+        return this.sellerFlow.handleOrderManagement(message.body, session);
       default:
         session.currentState = 'seller_main';
         return this.sellerFlow.getSellerMenu();
