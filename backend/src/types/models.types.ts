@@ -9,6 +9,25 @@ export interface OrderItem {
   quantity: number;
 }
 
+export interface ShippingAddress {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+}
+
+export interface Shipping {
+  cost: number;
+  courier: string;
+  tracking_number: string;
+  address: ShippingAddress;
+  eta?: string;
+}
+
 export interface OrderDocument extends Document {
   orderId: string;
   user: string;
@@ -16,6 +35,7 @@ export interface OrderDocument extends Document {
   total: number;
   paid: boolean;
   items: OrderItem[];
+  shipping?: Shipping;
   createdAt: Date;
   updatedAt: Date;
 }

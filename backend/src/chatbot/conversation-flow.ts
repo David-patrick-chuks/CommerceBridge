@@ -70,7 +70,9 @@ export class ConversationFlow {
       case 'cart_management':
         return await this.customerFlow.handleCartManagement(messageText, session);
       case 'checkout':
-        return this.customerFlow.handleCheckout(messageText, session);
+        return await this.customerFlow.handleCheckout(messageText, session);
+      case 'tracking_package':
+        return await this.customerFlow.handleTracking(messageText, session);
       default:
         session.currentState = 'customer_main';
         return this.customerFlow.getCustomerMenu();

@@ -125,23 +125,26 @@ export class WhatsAppBot extends EventEmitter {
   }
 
   private async handleIncomingMessage(message: Message): Promise<void> {
-    // Debug: Log every incoming message event
-    console.log('[WhatsAppBot] handleIncomingMessage fired:', {
-      from: message.from,
-      type: message.type,
-      body: message.body,
-      fromMe: message.fromMe
-      
-    });
     try {
       // Skip messages from self
       if (message.fromMe) return;
 
-      // Skip status messages from status@broadcast
+      // Skip status messages from status@broadcast (including images and videos)
       if (message.from === 'status@broadcast') {
-        console.log(`🚫 Skipping status message from ${message.from}`);
+        // Only log occasionally to avoid spam, not every status message
+        if (Math.random() < 0.01) { // Log only 1% of status messages
+          console.log(`🚫 Skipping status message from ${message.from} (type: ${message.type})`);
+        }
         return;
       }
+
+      // Debug: Log only non-status messages
+      console.log('[WhatsAppBot] Processing message:', {
+        from: message.from,
+        type: message.type,
+        body: message.body?.substring(0, 100) + (message.body?.length > 100 ? '...' : ''),
+        fromMe: message.fromMe
+      });
 
       // Update last activity
       this.status.lastActivity = new Date();
