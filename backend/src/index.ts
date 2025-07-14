@@ -22,7 +22,21 @@ import shortUrlRoutes from './routes/short-url';
 import usersRoutes from './routes/users';
 import webhookRoutes from './routes/webhooks';
 
-import { customLogger, devLogger, prodLogger } from './middleware/logger';
+import path from 'path';
+import { auditLogMiddleware } from './middleware/audit-log';
+import { bruteForce } from './middleware/brute-force';
+import csrfMiddleware from './middleware/csrf';
+import { geoBlockMiddleware } from './middleware/geo-block';
+import helmetMiddleware from './middleware/helmet';
+import { ipWhitelistMiddleware } from './middleware/ip-whitelist';
+import { devLogger, prodLogger } from './middleware/logger';
+import { authLimiter, globalLimiter } from './middleware/rate-limit';
+import sessionMiddleware from './middleware/session';
+import { wafMiddleware } from './middleware/waf';
+import { backupDatabase } from './utils/backup';
+import { checkFileIntegrity, updateFileHash } from './utils/file-integrity';
+import { rotateKey } from './utils/key-manager';
+import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config({ quiet: true });
@@ -60,6 +74,47 @@ const logger = process.env.NODE_ENV === 'production' ? prodLogger : devLogger;
 app.use(logger);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Security headers and WAF
+app.use(helmetMiddleware);
+app.use(wafMiddleware);
+app.use(geoBlockMiddleware);
+app.use(ipWhitelistMiddleware);
+
+// Audit logging
+app.use(auditLogMiddleware);
+
+// Periodic file integrity check and backup
+const filesToMonitor = [__filename];
+setInterval(async () => {
+  for (const file of filesToMonitor) {
+    const ok = await checkFileIntegrity(file);
+    if (!ok) {
+      logger.error(`File integrity violation detected for ${file}`);
+      process.exit(1);
+    }
+    await updateFileHash(file);
+  }
+}, 60 * 1000); // Every minute
+
+setInterval(async () => {
+  const backupPath = path.join(__dirname, `backup-${Date.now()}.json`);
+  // Replace with actual DB/data to backup
+  const dummyData = { timestamp: new Date().toISOString() };
+  await backupDatabase(dummyData, backupPath);
+  logger.info(`Database backup created at ${backupPath}`);
+}, 24 * 60 * 60 * 1000); // Daily
+
+// Key rotation schedule (every 4 hours)
+setInterval(async () => {
+  const newKey = await rotateKey();
+  logger.info(`Key rotated at ${new Date().toISOString()}: ${newKey.slice(0, 10)}...`);
+}, 4 * 60 * 60 * 1000); // 4 hours
+
+// Core security middleware
+app.use(sessionMiddleware);
+app.use(globalLimiter);
+app.use(csrfMiddleware);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -294,7 +349,7 @@ app.get('/live', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, bruteForce.prevent, authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/pay', paymentRoutes);
