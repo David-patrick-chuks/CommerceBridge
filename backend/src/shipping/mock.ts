@@ -1,8 +1,8 @@
-import { 
-  ShipbubbleRatesResponse, 
-  ShipbubbleShipmentResponse,
-  ShipbubbleAddress,
-  ShipbubblePackage 
+import {
+  ShippingAddress as ShipbubbleAddress,
+  ShippingPackage as ShipbubblePackage,
+  ShippingRatesResponse as ShipbubbleRatesResponse,
+  ShippingShipmentResponse as ShipbubbleShipmentResponse
 } from './types';
 
 /**
@@ -128,7 +128,7 @@ export class MockShipbubbleService {
           ship_from: shipFrom,
           ship_to: shipTo,
           currency: 'NGN',
-          package_amount: packageInfo.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0,
+          package_amount: packageInfo.items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0,
           package_weight: packageInfo.weight,
           pickup_date: new Date().toISOString().split('T')[0]
         }

@@ -228,10 +228,10 @@ ${formatWhatsAppItalic('Type the number or describe what you need!')}`;
       if (messageText.toLowerCase() === 'confirm' || messageText.toLowerCase() === 'yes') {
         return await this.processOrder(session);
       } else if (messageText.toLowerCase() === 'cancel' || messageText.toLowerCase() === 'no') {
-        session.currentState = 'cart_management';
+      session.currentState = 'cart_management';
         session.context.checkoutState = undefined;
-        return this.getCartSummary(session);
-      } else {
+      return this.getCartSummary(session);
+    } else {
         return this.getOrderConfirmation(session);
       }
     }

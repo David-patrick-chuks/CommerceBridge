@@ -1,0 +1,171 @@
+.create-account-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9f9f9;
+}
+
+.create-account-form {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.create-account-title {
+  color: #25d366;
+  margin-bottom: 24px;
+}
+
+.validating-message {
+  text-align: center;
+  margin: 32px 0;
+  color: #888;
+}
+
+.expired-container {
+  text-align: center;
+  margin: 32px 0;
+}
+
+.expired-icon {
+  font-size: 48px;
+  color: red;
+  margin-bottom: 16px;
+}
+
+.expired-title {
+  color: red;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.expired-message {
+  margin-bottom: 24px;
+}
+
+.whatsapp-button {
+  display: inline-flex;
+  align-items: center;
+  background: #25d366;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1.1em;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.whatsapp-icon {
+  margin-right: 8px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 32px 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #eee;
+  border-top: 4px solid #25d366;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: #888;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.success-container {
+  text-align: center;
+  margin: 32px 0;
+}
+
+.success-icon {
+  font-size: 48px;
+  color: #25d366;
+  margin-bottom: 16px;
+}
+
+.success-title {
+  color: #25d366;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.success-message {
+  margin-bottom: 24px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.categories-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.category-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #eee;
+  color: #333;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.category-label.selected {
+  background: #25d366;
+  color: #fff;
+}
+
+.category-checkbox {
+  margin-right: 4px;
+}
+
+.submit-button {
+  background: #25d366;
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 6px;
+  font-size: 1.1em;
+  cursor: pointer;
+  width: 100%;
+}
+
+.error-message {
+  color: red;
+  margin-top: 16px;
+}
+
+.file-name {
+  margin-top: 8px;
+  display: block;
+} 
