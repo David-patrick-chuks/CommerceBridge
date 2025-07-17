@@ -16,7 +16,7 @@ export async function authenticateJWT(req: Request, res: Response, next: NextFun
   try {
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET) as AuthTokenPayload;
     req.user = decoded;
-    next();
+    return next();
   } catch (error) {
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
@@ -36,7 +36,7 @@ export async function verifyRefreshToken(req: Request, res: Response, next: Next
       return res.status(403).json({ error: 'Invalid refresh token' });
     }
     req.user = decoded;
-    next();
+    return next();
   } catch (error) {
     return res.status(403).json({ error: 'Invalid or expired refresh token' });
   }

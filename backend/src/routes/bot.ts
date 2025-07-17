@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import {
     deleteBotSession,
-    getBotQRCode,
+    getBotQRCodeImage,
+    getBotQRPage,
     getBotStatus,
     listBotSessions,
     logoutBot
@@ -10,7 +11,8 @@ import {
 const router = Router();
 
 router.get('/status', getBotStatus);
-router.get('/qr', getBotQRCode);
+router.get('/qr', getBotQRPage); // HTML page with QR and refresh
+router.get('/qr/image', getBotQRCodeImage); // PNG only
 router.get('/sessions', listBotSessions);
 router.delete('/sessions/:sessionName', deleteBotSession);
 router.post('/logout', logoutBot);

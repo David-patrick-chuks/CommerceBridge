@@ -1,10 +1,9 @@
-import './types/express';
+/// <reference path="./types/express.d.ts" />
 import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import { createServer } from 'http';
-import mongoose from 'mongoose'; // Added for MongoDB connection status
 
 // Import services
 import { WhatsAppBot } from './chatbot/whatsapp-bot';
@@ -85,17 +84,19 @@ app.use(ipWhitelistMiddleware);
 app.use(auditLogMiddleware);
 
 // Periodic file integrity check and backup
-const filesToMonitor = [__filename];
-setInterval(async () => {
-  for (const file of filesToMonitor) {
-    const ok = await checkFileIntegrity(file);
-    if (!ok) {
-      logger.error(`File integrity violation detected for ${file}`);
-      process.exit(1);
+if (process.env.NODE_ENV === 'production') {
+  const filesToMonitor = [__filename];
+  setInterval(async () => {
+    for (const file of filesToMonitor) {
+      const ok = await checkFileIntegrity(file);
+      if (!ok) {
+        logger.error(`File integrity violation detected for ${file}`);
+        process.exit(1);
+      }
+      await updateFileHash(file);
     }
-    await updateFileHash(file);
-  }
-}, 60 * 1000); // Every minute
+  }, 60 * 1000); // Every minute
+}
 
 setInterval(async () => {
   const backupPath = path.join(__dirname, `backup-${Date.now()}.json`);
@@ -114,250 +115,23 @@ setInterval(async () => {
 // Core security middleware
 app.use(sessionMiddleware);
 app.use(globalLimiter);
+
+// --- CSRF EXEMPTION FOR /api/shorten ---
+// Allow public onboarding/account creation to POST /api/shorten without CSRF (no sensitive state change)
+app.use('/api/shorten', shortUrlRoutes); // Register this route BEFORE csrfMiddleware
+// --- END EXEMPTION ---
+
 app.use(csrfMiddleware);
-
-// Health check endpoint
-app.get('/health', async (req, res) => {
-  try {
-    // Get system metrics
-    const uptime = process.uptime();
-    const memoryUsage = process.memoryUsage();
-    const botStatus = whatsappBot.getStatus();
-    
-    // Check database connections
-    const dbHealth = await databaseService.healthCheck();
-    const dbConnectionStatus = databaseService.getConnectionStatus();
-    
-    // Determine overall health
-    const isHealthy = dbHealth.mongodb && dbHealth.redis && botStatus.connectionState !== 'disconnected';
-    
-    const healthResponse = {
-      status: isHealthy ? 'healthy' : 'degraded',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      uptime: {
-        seconds: Math.floor(uptime),
-        formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`
-      },
-      services: {
-        mongodb: {
-          status: dbHealth.mongodb ? 'connected' : 'disconnected',
-          connectionState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-        },
-        redis: {
-          status: dbHealth.redis ? 'connected' : 'disconnected',
-          connectionState: dbConnectionStatus.redis ? 'connected' : 'disconnected'
-        },
-        whatsappBot: {
-          status: botStatus.connectionState,
-          isReady: botStatus.isReady,
-          isConnected: botStatus.isConnected,
-          isConnecting: botStatus.isConnecting,
-          lastActivity: botStatus.lastActivity
-        }
-      },
-      system: {
-        memory: {
-          rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
-          heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
-          heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
-          external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`
-        },
-        nodeVersion: process.version,
-        platform: process.platform,
-        pid: process.pid
-      },
-      endpoints: {
-        botStatus: `http://localhost:${PORT}/api/bot/status`,
-        qrCode: `http://localhost:${PORT}/api/bot/qr`,
-        health: `http://localhost:${PORT}/health`
-      }
-    };
-
-    res.status(isHealthy ? 200 : 503).json(healthResponse);
-  } catch (error) {
-    console.error('❌ Health check failed:', error);
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Health check failed',
-      message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Service unavailable'
-    });
-  }
-});
-
-// Detailed health check endpoint for monitoring
-app.get('/health/detailed', async (req, res) => {
-  try {
-    const startTime = Date.now();
-    const uptime = process.uptime();
-    const memoryUsage = process.memoryUsage();
-    const botStatus = whatsappBot.getStatus();
-    
-    // Check database connections
-    const dbHealth = await databaseService.healthCheck();
-    const dbConnectionStatus = databaseService.getConnectionStatus();
-    
-    // Get session information
-    const sessionManager = whatsappBot['sessionManager'];
-    const activeSessions = sessionManager ? sessionManager.getActiveSessions() : [];
-    const sessionCount = sessionManager ? sessionManager.getSessionCount() : 0;
-    
-    // Get database stats
-    let userCount = 0;
-    let orderCount = 0;
-    try {
-      const { UserModel } = await import('./models/user');
-      const { OrderModel } = await import('./models/order');
-      userCount = await UserModel.countDocuments();
-      orderCount = await OrderModel.countDocuments();
-    } catch (err) {
-      console.error('❌ Failed to get database stats:', err);
-    }
-    
-    const responseTime = Date.now() - startTime;
-    
-    const detailedHealthResponse = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      responseTime: `${responseTime}ms`,
-      uptime: {
-        seconds: Math.floor(uptime),
-        formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`
-      },
-      services: {
-        mongodb: {
-          status: dbHealth.mongodb ? 'connected' : 'disconnected',
-          connectionState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-          stats: {
-            users: userCount,
-            orders: orderCount
-          }
-        },
-        redis: {
-          status: dbHealth.redis ? 'connected' : 'disconnected',
-          connectionState: dbConnectionStatus.redis ? 'connected' : 'disconnected'
-        },
-        whatsappBot: {
-          status: botStatus.connectionState,
-          isReady: botStatus.isReady,
-          isConnected: botStatus.isConnected,
-          isConnecting: botStatus.isConnecting,
-          lastActivity: botStatus.lastActivity,
-          qrCodeAvailable: !!botStatus.qrCode
-        }
-      },
-      sessions: {
-        active: activeSessions.length,
-        total: sessionCount,
-        activeUsers: activeSessions.map(s => ({
-          phoneNumber: s.phoneNumber,
-          userType: s.userType,
-          lastActivity: s.lastActivity,
-          needsAccount: s.needsAccount
-        }))
-      },
-      system: {
-        memory: {
-          rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
-          heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
-          heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
-          external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`,
-          heapUsagePercent: `${Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)}%`
-        },
-        nodeVersion: process.version,
-        platform: process.platform,
-        pid: process.pid,
-        cpuUsage: process.cpuUsage(),
-        env: process.env.NODE_ENV || 'development'
-      },
-      performance: {
-        responseTime,
-        memoryUsagePercent: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
-        uptimePercent: Math.round((uptime / (24 * 3600)) * 100) // Assuming 24h as 100%
-      },
-      endpoints: {
-        botStatus: `http://localhost:${PORT}/api/bot/status`,
-        qrCode: `http://localhost:${PORT}/api/bot/qr`,
-        health: `http://localhost:${PORT}/health`,
-        detailedHealth: `http://localhost:${PORT}/health/detailed`
-      }
-    };
-
-    res.status(200).json(detailedHealthResponse);
-  } catch (error) {
-    console.error('❌ Detailed health check failed:', error);
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Detailed health check failed',
-      message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Service unavailable'
-    });
-  }
-});
-
-// Readiness probe - checks if service is ready to accept traffic
-app.get('/ready', async (req, res) => {
-  try {
-    const dbHealth = await databaseService.healthCheck();
-    const botStatus = whatsappBot.getStatus();
-    
-    // Service is ready if databases are connected and bot is initialized
-    const isReady = dbHealth.mongodb && dbHealth.redis && botStatus.connectionState !== 'disconnected';
-    
-    if (isReady) {
-      res.status(200).json({
-        status: 'ready',
-        timestamp: new Date().toISOString(),
-        message: 'Service is ready to accept traffic'
-      });
-    } else {
-      res.status(503).json({
-        status: 'not_ready',
-        timestamp: new Date().toISOString(),
-        message: 'Service is not ready to accept traffic',
-        issues: {
-          mongodb: !dbHealth.mongodb ? 'disconnected' : 'connected',
-          redis: !dbHealth.redis ? 'disconnected' : 'connected',
-          whatsappBot: botStatus.connectionState === 'disconnected' ? 'disconnected' : 'connected'
-        }
-      });
-    }
-  } catch (error) {
-    res.status(503).json({
-      status: 'not_ready',
-      timestamp: new Date().toISOString(),
-      error: 'Readiness check failed'
-    });
-  }
-});
-
-// Liveness probe - checks if service is alive
-app.get('/live', (req, res) => {
-  const uptime = process.uptime();
-  
-  res.status(200).json({
-    status: 'alive',
-    timestamp: new Date().toISOString(),
-    uptime: {
-      seconds: Math.floor(uptime),
-      formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`
-    },
-    pid: process.pid
-  });
-});
 
 // API Routes
 app.use('/api/auth', authLimiter, bruteForce.prevent, authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/pay', paymentRoutes);
-app.use('/api/webhooks', webhookRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api', shortUrlRoutes);
 app.use('/api/bot', botRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

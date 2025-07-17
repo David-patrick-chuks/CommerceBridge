@@ -12,6 +12,10 @@ export interface UserSession {
   orderHistory?: string[];
   preferences?: UserPreferences;
   needsAccount?: boolean;
+  /**
+   * The latest Gemini flow parser result for this session (if available)
+   */
+  lastParsedFlow?: any;
 }
 
 export interface CartItem {

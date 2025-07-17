@@ -32,7 +32,7 @@ export const createShortUrl = async (req: Request, res: Response) => {
   const shortUrl = new ShortUrlModel({ code, targetUrl: url, createdBy, expiresAt });
   await shortUrl.save();
   // Construct the full short URL (assume production base URL is set in env, fallback to localhost)
-  const base = process.env.SHORTENER_BASE_URL || 'http://localhost:3001/api';
+  const base = process.env.SHORTENER_BASE_URL || 'http://localhost:3001/api/shorten';
   const response: ShortUrlResponse = {
     shortUrl: `${base}/s/${code}`,
     expiresAt

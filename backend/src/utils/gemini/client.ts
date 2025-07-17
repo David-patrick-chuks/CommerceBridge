@@ -28,15 +28,17 @@ export class GeminiClient {
    */
   async generateContent(
     request: GeminiRequest,
-    maxRetries: number = DEFAULT_GEMINI_CONFIG.maxRetries
+    maxRetries?: number
   ): Promise<GeminiResponse> {
+    // Set maxRetries to the number of API keys if not provided
+    const totalRetries = maxRetries ?? apiKeyManager.getKeyCount();
     let retryCount = 0;
     let client = apiKeyManager.getClient();
 
     console.log(`🔍 Debug: API Key count: ${apiKeyManager.getKeyCount()}, Current index: ${apiKeyManager.getCurrentIndex()}`);
     console.log(`🔍 Debug: Request model: ${request.model}, config:`, request.config);
 
-    while (retryCount < maxRetries) {
+    while (retryCount < totalRetries) {
       try {
         console.log(`🔑 Using API Key index: ${apiKeyManager.getCurrentIndex()}`);
         const response = await client.models.generateContent(request);
@@ -44,10 +46,10 @@ export class GeminiClient {
         return response;
       } catch (error: any) {
         retryCount++;
-        console.error(`❌ Error attempt ${retryCount}/${maxRetries}:`, error.message);
+        console.error(`❌ Error attempt ${retryCount}/${totalRetries}:`, error.message);
         console.error(`❌ Full error:`, error);
-        
-        if (retryCount >= maxRetries) {
+
+        if (retryCount >= totalRetries) {
           console.error("Maximum retry attempts reached. Could not complete the API call.");
           throw new GeminiError("Failed to generate content after maximum retries.");
         }
@@ -93,7 +95,7 @@ export class GeminiClient {
     };
 
     const response = await this.generateContent(request);
-    
+
     if (!response?.text) {
       throw new GeminiError("Gemini failed to return structured data.");
     }
@@ -124,12 +126,23 @@ export class GeminiClient {
     };
 
     const response = await this.generateContent(request);
-    
+
     if (!response?.text) {
       throw new GeminiError("Gemini failed to generate text response.");
     }
 
     return response.text.trim();
+  }
+
+  /**
+   * Parse user message into structured data using a custom schema and system instruction
+   */
+  async parseStructured(
+    userMessage: string,
+    schema: any,
+    systemInstruction?: string
+  ): Promise<any> {
+    return this.generateJsonResponse(userMessage, schema, systemInstruction);
   }
 
   /**
@@ -142,6 +155,17 @@ export class GeminiClient {
 
 // Export singleton instance
 export const geminiClient = new GeminiClient();
+
+/**
+ * Generic function to parse user message into structured data using Gemini
+ */
+export async function parseStructured(
+  userMessage: string,
+  schema: any,
+  systemInstruction?: string
+): Promise<any> {
+  return geminiClient.parseStructured(userMessage, schema, systemInstruction);
+}
 
 /**
  * @deprecated Use geminiClient.generateContent() instead

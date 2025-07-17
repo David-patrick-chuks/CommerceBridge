@@ -23,6 +23,6 @@ export const dataLimiter = rateLimit({
   store: new RedisStore({ sendCommand: (...args: any[]) => redisClient.sendCommand(args) }),
   windowMs: 15 * 60 * 1000,
   max: 40,
-  keyGenerator: (req) => (req.user?.username || req.ip),
+  keyGenerator: (req) => req.user?.username || req.ip || '',
   message: 'Too many data requests for this user, please try again later.'
 }); 

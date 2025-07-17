@@ -22,6 +22,15 @@ export class ConversationFlow {
     session.phoneNumber = normalizedPhone;
     const messageText = message.body.toLowerCase().trim();
     
+    // --- LOG GEMINI FLOW PARSER RESULT IF AVAILABLE ---
+    if (session.lastParsedFlow) {
+      console.log('[ConversationFlow] Gemini parsed flow:', JSON.stringify(session.lastParsedFlow, null, 2));
+      if (session.lastParsedFlow.intent && session.lastParsedFlow.intent !== 'unknown') {
+        console.log(`[ConversationFlow] Parsed intent: ${session.lastParsedFlow.intent}`);
+      }
+    }
+    // --- END LOG ---
+
     console.log(`🔄 Processing message: "${messageText}" for state: ${session.currentState}`);
 
     try {
@@ -46,7 +55,7 @@ export class ConversationFlow {
 
       // Handle different user types and states
       if (session.userType === 'customer') {
-        return await this.handleCustomerFlow(messageText, session);
+        return await this.handleCustomerFlow(messageText, session, client, message.from);
       }
       if (session.userType === 'seller') {
         return await this.handleSellerFlow(message, session);
@@ -59,11 +68,23 @@ export class ConversationFlow {
     }
   }
 
-  private async handleCustomerFlow(messageText: string, session: UserSession): Promise<string> {
+  private async handleCustomerFlow(messageText: string, session: UserSession, client?: any, from?: string): Promise<string> {
     switch (session.currentState) {
-      case 'customer_main':
-        return await this.customerFlow.handleCustomerMain(messageText, session);
+      case 'customer_main': {
+        const response = await this.customerFlow.handleCustomerMain(messageText, session);
+        // If the response is empty and state is now browsing_products, handle it immediately
+        if (response === '' && String(session.currentState) === 'browsing_products') {
+          if (client && from) {
+            await this.customerFlow.getProductCatalog(session, client, from);
+            return '';
+          } else {
+            return await this.customerFlow.getProductCatalog(session);
+          }
+        }
+        return response;
+      }
       case 'browsing_products':
+        // Handle product selection when browsing products
         return await this.customerFlow.handleProductBrowsing(messageText, session);
       case 'searching_products':
         return this.customerFlow.handleProductSearch(messageText, session);

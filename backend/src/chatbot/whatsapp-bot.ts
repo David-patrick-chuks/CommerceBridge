@@ -1,9 +1,12 @@
 import { EventEmitter } from 'events';
+import fs from 'fs';
 import mongoose from 'mongoose';
+import path from 'path';
 import qrcode from 'qrcode';
 import { Client, Message, MessageMedia, RemoteAuth } from 'whatsapp-web.js';
 import { MongoStore } from 'wwebjs-mongo';
 import { BotStatus, OrderData } from '../types';
+import { parseUserMessageForAllFlows } from '../utils/gemini/flow-parser';
 import { ConversationFlow } from './conversation-flow';
 import { MessageHandler } from './message-handler';
 import { ChatSession } from './session-manager';
@@ -22,6 +25,12 @@ export class WhatsAppBot extends EventEmitter {
     
     // Initialize MongoDB store for RemoteAuth
     this.store = new MongoStore({ mongoose: mongoose });
+
+    // Check for RemoteAuth session file (ignore if missing in dev)
+    const sessionPath = path.join(__dirname, '../../RemoteAuth-commerce-bridge-bot.zip');
+    if (!fs.existsSync(sessionPath)) {
+      console.warn('[WhatsAppBot] RemoteAuth session file not found, starting with fresh session.');
+    }
     
     this.client = new Client({
       authStrategy: new RemoteAuth({
@@ -153,7 +162,18 @@ export class WhatsAppBot extends EventEmitter {
 
       // Get or create session for this user
       const session = await this.sessionManager.getSession(message.from, message.body);
-      
+
+      // --- GEMINI FLOW PARSER INTEGRATION ---
+      try {
+        const parsedFlow = await parseUserMessageForAllFlows(message.body || '');
+        console.log('[Gemini Flow Parser]', JSON.stringify(parsedFlow, null, 2));
+        // Optionally: attach to session/context for future use
+        session.lastParsedFlow = parsedFlow;
+      } catch (err) {
+        console.error('[Gemini Flow Parser] Error:', err);
+      }
+      // --- END GEMINI FLOW PARSER INTEGRATION ---
+
       // Handle the message based on conversation flow
       const response = await this.conversationFlow.processMessage(message, session, this.client);
       

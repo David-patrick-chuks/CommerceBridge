@@ -29,5 +29,5 @@ export function wafMiddleware(req: Request, res: Response, next: NextFunction) {
   ) {
     return res.status(403).json({ error: 'Malicious input detected' });
   }
-  next();
+ return next();
 } 

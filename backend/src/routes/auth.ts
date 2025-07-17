@@ -5,6 +5,11 @@ import { UserModel } from '../models/user';
 import { TokenService } from '../services/token-service';
 import { AuthTokenPayload, LoginRequest, LoginResponse, RefreshTokenResponse } from '../types/auth.types';
 
+// Add RequestWithUser interface
+interface RequestWithUser extends Request {
+  user?: AuthTokenPayload;
+}
+
 const router = Router();
 
 // POST /login
@@ -13,7 +18,8 @@ router.post('/login', async (req: Request, res: Response) => {
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
-  const user = await UserModel.findOne({ name: username });
+  // Use .exec() for better typing and cast to UserDocument | null
+  const user = await UserModel.findOne({ name: username }).exec() as import('../types/models.types').UserDocument | null;
   if (!user) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
@@ -30,12 +36,12 @@ router.post('/login', async (req: Request, res: Response) => {
   const refreshToken = TokenService.generateRefreshToken(payload);
   await TokenService.storeRefreshToken(payload.sub, refreshToken);
   const response: LoginResponse = { accessToken, refreshToken };
-  res.json(response);
+  return res.json(response);
 });
 
 // POST /refresh-token
-router.post('/refresh-token', verifyRefreshToken, async (req: Request, res: Response) => {
-  const user = req.user as AuthTokenPayload;
+router.post('/refresh-token', verifyRefreshToken, async (req: RequestWithUser, res: Response) => {
+  const user = req.user!;
   const newAccessToken = TokenService.generateAccessToken({
     sub: user.sub,
     username: user.username,
@@ -46,8 +52,8 @@ router.post('/refresh-token', verifyRefreshToken, async (req: Request, res: Resp
 });
 
 // POST /logout
-router.post('/logout', authenticateJWT, async (req: Request, res: Response) => {
-  const user = req.user as AuthTokenPayload;
+router.post('/logout', authenticateJWT, async (req: RequestWithUser, res: Response) => {
+  const user = req.user!;
   await TokenService.revokeRefreshToken(user.sub);
   res.json({ message: 'Logged out successfully' });
 });

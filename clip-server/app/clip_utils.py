@@ -5,7 +5,7 @@ from PIL import Image
 _clip_model = None
 _clip_preprocess = None
 _clip_device = "cuda" if torch.cuda.is_available() else "cpu"
-EMBEDDING_DIM = 768  # Correct for ViT-L/14
+EMBEDDING_DIM = 768  # dimension for ViT-L/14
 
 def initialize_clip():
     """Initialize CLIP model and preprocess, loading only once."""

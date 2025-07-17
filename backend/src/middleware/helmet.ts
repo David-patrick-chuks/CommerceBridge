@@ -1,13 +1,15 @@
 import helmet from 'helmet';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 const helmetMiddleware = helmet({
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'none'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'"],
-      imgSrc: ["'self'"],
+      scriptSrc: isDev ? ["'self'", "'unsafe-inline'"] : ["'self'"],
+      styleSrc: isDev ? ["'self'", "'unsafe-inline'"] : ["'self'"],
+      imgSrc: ["'self'", "data:"],
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
@@ -19,8 +21,6 @@ const helmetMiddleware = helmet({
   referrerPolicy: { policy: 'no-referrer' },
   frameguard: { action: 'deny' },
   noSniff: true,
-  xssFilter: true,
-  expectCt: { maxAge: 86400, enforce: true },
   dnsPrefetchControl: { allow: false }
 });
 

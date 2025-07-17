@@ -73,7 +73,7 @@ Type *1* for Customer or *2* for Seller`;
       const longLink = `http://localhost:5173/create-account?wa=${encodeURIComponent(phone)}`;
       let link = longLink;
       try {
-        const res = await axios.post('http://localhost:3001/api/shorten', { url: longLink });
+        const res = await axios.post('http://localhost:3001/api/shorten/shorten', { url: longLink });
         if (res.data && res.data.shortUrl) link = res.data.shortUrl;
       } catch (err) {
         console.error('Shortener failed, using long URL:', err);

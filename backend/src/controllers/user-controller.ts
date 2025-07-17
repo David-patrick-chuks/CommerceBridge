@@ -7,6 +7,7 @@ import { STORE_CATEGORIES } from '../constants/categories';
 import { UserModel } from '../models/user';
 import { uploadImage } from '../services/cloudinary-service';
 import { notificationService } from '../services/notification-service';
+import { validateAddressWithShipbubble } from '../services/shipbubble-service';
 import { unknownUserService } from '../services/unknown-user-service';
 import { CreateUserRequest, StoreCategoriesResponse } from '../types';
 import { generateWelcomeBanner } from '../utils/banner-generator';
@@ -23,12 +24,32 @@ export const createOrUpdateUser = async (req: Request, res: Response, whatsappCl
   phoneNumber = phoneNumber.replace(/@c\.us$/, '');
   userType = userType || 'customer';
   // Validate seller fields
+  let storeAddressValidation = undefined;
   if (userType === 'seller') {
     if (!storeName) {
       return res.status(400).json({ error: 'storeName is required for sellers' });
     }
     if (!storeCategories || !Array.isArray(storeCategories) || storeCategories.length === 0) {
       return res.status(400).json({ error: 'At least one storeCategory is required for sellers' });
+    }
+    // --- Shipbubble address validation ---
+    if (!storeAddress) {
+      return res.status(400).json({ error: 'storeAddress is required for sellers' });
+    }
+    try {
+      const validation = await validateAddressWithShipbubble({
+        phone: phoneNumber,
+        email,
+        name,
+        address: storeAddress,
+      });
+      if (validation.status !== 'success') {
+        return res.status(400).json({ error: 'Invalid store address. Please check and try again.' });
+      }
+      storeAddressValidation = validation.data;
+    } catch (err) {
+      console.error('❌ Shipbubble address validation failed:', err);
+      return res.status(500).json({ error: 'Failed to validate store address. Please try again.' });
     }
   }
   // Handle image upload
@@ -46,7 +67,7 @@ export const createOrUpdateUser = async (req: Request, res: Response, whatsappCl
   try {
     const user = await UserModel.findOneAndUpdate(
       { phoneNumber },
-      { name, email, userType, profileImage, storeName, storeDescription, storeAddress, storeCategories },
+      { name, email, userType, profileImage, storeName, storeDescription, storeAddress, storeCategories, storeAddressValidation },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 

@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import { UserModel } from '../models';
+import { CartModel } from '../models/cart';
 import { unknownUserService } from '../services/unknown-user-service';
 import { CartItem, UserPreferences, UserSession } from '../types';
 
@@ -20,12 +22,22 @@ export class ChatSession {
     // Check if user exists in MongoDB
     let needsAccount = false;
     let userType: 'customer' | 'seller' | 'unknown' = 'unknown';
+    let cartItems: CartItem[] | undefined;
     try {
       const user = await UserModel.findOne({ phoneNumber });
       // console.log('[SessionManager] User found in DB:', user);
       needsAccount = !user;
       if (user) {
         userType = user.userType; // set userType from DB
+        // --- Load cart from DB for registered user ---
+        const dbCart = await CartModel.findOne({ userId: user._id, isActive: true });
+        cartItems = dbCart ? dbCart.items.map(item => ({
+          productId: item.productId.toString(),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          addedAt: item.addedAt
+        })) : [];
       } else if (firstMessage) {
         // Save unknown user data on first message
         try {
@@ -53,7 +65,7 @@ export class ChatSession {
       context: {},
       lastActivity: new Date(),
       isActive: true,
-      cart: [],
+      cart: typeof cartItems !== 'undefined' ? cartItems : [],
       orderHistory: [],
       preferences: {
         language: 'en',
@@ -139,10 +151,8 @@ export class ChatSession {
   async addToCart(phoneNumber: string, item: CartItem): Promise<void> {
     const session = await this.getSession(phoneNumber);
     if (!session.cart) session.cart = [];
-    
     // Check if item already exists in cart
     const existingItemIndex = session.cart.findIndex(cartItem => cartItem.productId === item.productId);
-    
     if (existingItemIndex >= 0) {
       // Update quantity
       session.cart[existingItemIndex].quantity += item.quantity;
@@ -150,8 +160,39 @@ export class ChatSession {
       // Add new item
       session.cart.push(item);
     }
-    
     await this.updateSession(phoneNumber, session);
+    // --- Persist to DB for registered users ---
+    if (session.userType !== 'unknown') {
+      const user = await UserModel.findOne({ phoneNumber });
+      if (user) {
+        let dbCart = await CartModel.findOne({ userId: user._id, isActive: true });
+        if (!dbCart) {
+          dbCart = new CartModel({
+            userId: user._id,
+            phoneNumber,
+            items: [],
+            total: 0,
+            itemCount: 0,
+            isActive: true
+          });
+        }
+        // Update or add item
+        const dbItemIndex = dbCart.items.findIndex(i => i.productId.toString() === item.productId.toString());
+        if (dbItemIndex >= 0) {
+          dbCart.items[dbItemIndex].quantity += item.quantity;
+        } else {
+          // Convert productId to ObjectId for DB
+          dbCart.items.push({
+            productId: new mongoose.Types.ObjectId(item.productId),
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            addedAt: new Date()
+          });
+        }
+        await dbCart.save();
+      }
+    }
   }
 
   async removeFromCart(phoneNumber: string, productId: string): Promise<void> {
@@ -159,6 +200,17 @@ export class ChatSession {
     if (session.cart) {
       session.cart = session.cart.filter(item => item.productId !== productId);
       await this.updateSession(phoneNumber, session);
+      // --- Persist to DB for registered users ---
+      if (session.userType !== 'unknown') {
+        const user = await UserModel.findOne({ phoneNumber });
+        if (user) {
+          let dbCart = await CartModel.findOne({ userId: user._id, isActive: true });
+          if (dbCart) {
+            dbCart.items = dbCart.items.filter(item => item.productId.toString() !== productId.toString());
+            await dbCart.save();
+          }
+        }
+      }
     }
   }
 
@@ -171,6 +223,17 @@ export class ChatSession {
     const session = await this.getSession(phoneNumber);
     session.cart = [];
     await this.updateSession(phoneNumber, session);
+    // --- Persist to DB for registered users ---
+    if (session.userType !== 'unknown') {
+      const user = await UserModel.findOne({ phoneNumber });
+      if (user) {
+        let dbCart = await CartModel.findOne({ userId: user._id, isActive: true });
+        if (dbCart) {
+          dbCart.items = [];
+          await dbCart.save();
+        }
+      }
+    }
   }
 
   async addToOrderHistory(phoneNumber: string, orderId: string): Promise<void> {

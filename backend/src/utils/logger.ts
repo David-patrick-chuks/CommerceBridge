@@ -4,7 +4,12 @@ import winston from 'winston';
 let logEncryptionKey: Buffer;
 (async () => {
   await sodium.ready;
-  logEncryptionKey = Buffer.from(process.env.LOG_ENCRYPTION_KEY || sodium.randombytes_buf(32).toString('hex'), 'hex');
+  let keyHex = process.env.LOG_ENCRYPTION_KEY;
+  if (!keyHex) {
+    const buf = sodium.randombytes_buf(32);
+    keyHex = Buffer.from(buf).toString('hex');
+  }
+  logEncryptionKey = Buffer.from(keyHex, 'hex');
 })();
 
 function encryptLog(data: string): string {
@@ -30,3 +35,4 @@ const logger = winston.createLogger({
 });
 
 export { encryptLog, logger };
+

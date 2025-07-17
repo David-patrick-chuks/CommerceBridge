@@ -5,6 +5,6 @@ const router = Router();
 
 router.post('/shorten', createShortUrl);
 router.get('/s/:code', redirectShortUrl);
-router.get('/shorten/validate/:code', validateShortUrl);
+router.get('/validate/:code', validateShortUrl);
 
 export default router; 

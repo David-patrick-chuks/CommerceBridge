@@ -1,0 +1,599 @@
+{
+    "status": "success",
+    "message": "Retrieved successfully",
+    "data": {
+        "request_token": "c4c445c6c38baa9b813d7bd64e32c72807692ff4e259d8016d3345eea7355e0e",
+        "couriers": [
+            {
+                "courier_id": "same_day_whoosh",
+                "courier_name": "WhooshNG",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1723731482/courier_images/b83a704a3f3694a2a70e795a01f11c33_fmjfsr.png",
+                "service_code": "whooshng",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 0,
+                    "symbol": "%",
+                    "discounted": 0
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 7,
+                "ratings": 4,
+                "votes": 10,
+                "connected_account": false,
+                "rate_card_amount": 4053.56,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 3 hours",
+                "pickup_eta_time": "2025-07-17 09:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 24 hrs",
+                "delivery_eta_time": "2025-07-18 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 251,
+                "total": 4053.56,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": "fez-delivery",
+                "courier_name": "Fez delivery",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1694592734/courier_images/fez_logo_njmlnz.png",
+                "service_code": "fez-delivery",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 10,
+                    "symbol": "%",
+                    "discounted": 323
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 6,
+                "ratings": 4.3,
+                "votes": 287,
+                "connected_account": false,
+                "rate_card_amount": 3910.5,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 24 Hours",
+                "pickup_eta_time": "2025-07-19 07:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 2 - 3 working days",
+                "delivery_eta_time": "2025-07-20 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 242,
+                "total": 3910.5,
+                "tracking": {
+                    "bars": 3,
+                    "label": "Average"
+                }
+            },
+            {
+                "courier_id": "on_demand",
+                "courier_name": "Errandlr",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1681587684/courier_images/errandlr_logo_2_nxf4qt.png",
+                "service_code": "errandlr",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 10,
+                    "symbol": "%",
+                    "discounted": 250
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 6,
+                "ratings": 4.3,
+                "votes": 97,
+                "connected_account": false,
+                "rate_card_amount": 3088,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 6 Hours",
+                "pickup_eta_time": "2025-07-17 13:59:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 24 hrs",
+                "delivery_eta_time": "2025-07-18 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 188,
+                "total": 3088,
+                "tracking": {
+                    "bars": 3,
+                    "label": "Average"
+                }
+            },
+            {
+                "courier_id": "chowdeck",
+                "courier_name": "Relay (Chowdeck)",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1713724533/courier_images/f6ff519b9ef671370dc845d9103a710f_zrm0no.jpg",
+                "service_code": "chowdeck",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 0,
+                    "symbol": "%",
+                    "discounted": 0
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": true,
+                "is_cod_available": false,
+                "tracking_level": 7,
+                "ratings": 4.6,
+                "votes": 25,
+                "connected_account": false,
+                "rate_card_amount": 5876,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 30 minutes",
+                "pickup_eta_time": "2025-07-17 07:49:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Same day delivery",
+                "delivery_eta_time": "2025-07-17 09:12:34",
+                "info": null,
+                "currency": "NGN",
+                "vat": 375,
+                "total": 5876,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": "renda",
+                "courier_name": "Renda",
+                "courier_image": "https://files.shipbubble.com/courier_images/e1fd7f65-1e7e0.png",
+                "service_code": "renda",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 5,
+                    "symbol": "%",
+                    "discounted": 113
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 7,
+                "ratings": 4,
+                "votes": 1,
+                "connected_account": false,
+                "rate_card_amount": 2825.8,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 24 hour(s)",
+                "pickup_eta_time": "2025-07-18 07:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 1 - 2 working days",
+                "delivery_eta_time": "2025-07-19 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 170,
+                "total": 2825.8,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": 2,
+                "courier_name": "Routely (Express Premium)",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1732635456/courier_images/84c3831195ccaef16fe02c02b1fe8629_qmpjr3.png",
+                "service_code": "routely",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 0,
+                    "symbol": "%",
+                    "discounted": 0
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 7,
+                "ratings": 5,
+                "votes": 3,
+                "connected_account": false,
+                "rate_card_amount": 4336,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 2 hour(s)",
+                "pickup_eta_time": "2025-07-17 11:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 10 hrs",
+                "delivery_eta_time": "2025-07-17 17:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 270,
+                "total": 4336,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": "N",
+                "courier_name": "DHL Nigeria",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1639728337/courier_images/dhl_logo_xupbkl.png",
+                "service_code": "dhl-nigeria",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 0,
+                    "symbol": "%",
+                    "discounted": 0
+                },
+                "service_type": "pickup",
+                "waybill": true,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 8,
+                "ratings": 4.5,
+                "votes": 8,
+                "connected_account": false,
+                "rate_card_amount": 12025.61,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Before 17:00 (GMT +1) July 17th 2025",
+                "pickup_eta_time": "2025-07-17 17:01:00",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 25 hrs",
+                "delivery_eta_time": "2025-07-18 08:49:39",
+                "info": [
+                    "Shipment placed after 4PM (GMT +1) will be processed to the next day",
+                    "Download waybill document from shipments page after shipment has been processed",
+                    "Attach waybill document to your packaged items",
+                    "Items to be shippped must be wrapped or packaged before pickup"
+                ],
+                "currency": "NGN",
+                "vat": 314.71,
+                "total": 12025.61,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": "whoosh_express",
+                "courier_name": "WhooshNG (Express)",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1723731482/courier_images/b83a704a3f3694a2a70e795a01f11c33_fmjfsr.png",
+                "service_code": "whooshng",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 0,
+                    "symbol": "%",
+                    "discounted": 0
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 7,
+                "ratings": 4,
+                "votes": 10,
+                "connected_account": false,
+                "rate_card_amount": 7288.5,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 1 hour",
+                "pickup_eta_time": "2025-07-17 08:49:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Same day delivery",
+                "delivery_eta_time": "2025-07-17 09:49:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 474,
+                "total": 7288.5,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": "darum",
+                "courier_name": "Darum NG",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1681942473/courier_images/darum_fyfgra.jpg",
+                "service_code": "darum",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 20,
+                    "symbol": "%",
+                    "discounted": 595
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 4,
+                "ratings": 4.7,
+                "votes": 46,
+                "connected_account": false,
+                "rate_card_amount": 3628.62,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Same day pickup",
+                "pickup_eta_time": "2025-07-17 14:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 24 hrs",
+                "delivery_eta_time": "2025-07-18 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 223,
+                "total": 3628.62,
+                "tracking": {
+                    "bars": 3,
+                    "label": "Average"
+                }
+            },
+            {
+                "courier_id": "gigl",
+                "courier_name": "GIG Logistics",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1638640741/courier_images/gig_logo_wsxvwb.png",
+                "service_code": "gigl",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 20,
+                    "symbol": "%",
+                    "discounted": 592
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 9,
+                "ratings": 4.3,
+                "votes": 105,
+                "connected_account": false,
+                "rate_card_amount": 3611.72,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 48 Hours",
+                "pickup_eta_time": "2025-07-19 07:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 1 - 2 working days",
+                "delivery_eta_time": "2025-07-19 07:19:39",
+                "info": [
+                    "Download label from shipments page after shipment has been processed and attach to your packaged items",
+                    "Items to be shippped must be wrapped or packaged"
+                ],
+                "currency": "NGN",
+                "vat": 222,
+                "total": 3611.72,
+                "tracking": {
+                    "bars": 5,
+                    "label": "Excellent"
+                }
+            },
+            {
+                "courier_id": "kwik",
+                "courier_name": "Kwik",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1637024346/courier_images/kwik_ymsjvz.png",
+                "service_code": "kwik",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 10,
+                    "symbol": "%",
+                    "discounted": 348
+                },
+                "service_type": "pickup",
+                "waybill": false,
+                "on_demand": true,
+                "is_cod_available": false,
+                "tracking_level": 9,
+                "ratings": 4.8,
+                "votes": 331,
+                "connected_account": false,
+                "rate_card_amount": 4196.92,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 2 Hours",
+                "pickup_eta_time": "2025-07-17 09:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Same day delivery",
+                "delivery_eta_time": "2025-07-17 10:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 261,
+                "total": 4196.92,
+                "tracking": {
+                    "bars": 5,
+                    "label": "Excellent"
+                }
+            },
+            {
+                "courier_id": 1,
+                "courier_name": "Routely (Express Standard)",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1732635456/courier_images/84c3831195ccaef16fe02c02b1fe8629_qmpjr3.png",
+                "service_code": "routely",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 0,
+                    "symbol": "%",
+                    "discounted": 0
+                },
+                "service_type": "dropoff",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 7,
+                "ratings": 5,
+                "votes": 3,
+                "connected_account": false,
+                "rate_card_amount": 2946.56,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 1 day(s)",
+                "pickup_eta_time": "2025-07-18 07:19:39",
+                "dropoff_station": {
+                    "name": "EGBEDA HUB",
+                    "address": "123/125, Idimu Road Gobi Plaza, Egbeda",
+                    "phone": "+2348071675266"
+                },
+                "pickup_station": {
+                    "name": "Find your nearest Routely pickup location here",
+                    "address": "https://www.routely.co/",
+                    "phone": "+2348071675266"
+                },
+                "delivery_eta": "Within 2 - 5 working days",
+                "delivery_eta_time": "2025-07-22 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 178,
+                "total": 2946.56,
+                "tracking": {
+                    "bars": 4,
+                    "label": "Good"
+                }
+            },
+            {
+                "courier_id": "1",
+                "courier_name": "Redstar",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1637023902/courier_images/LONE-STAR_avxsur.jpg",
+                "service_code": "red_star_courier",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 16,
+                    "symbol": "%",
+                    "discounted": 483
+                },
+                "service_type": "pickup",
+                "waybill": true,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 6,
+                "ratings": 3.1,
+                "votes": 20,
+                "connected_account": false,
+                "rate_card_amount": 3675.72,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 48 Hours",
+                "pickup_eta_time": "2025-07-19 07:19:39",
+                "dropoff_station": null,
+                "pickup_station": null,
+                "delivery_eta": "Within 2 - 3 working days",
+                "delivery_eta_time": "2025-07-20 07:19:39",
+                "info": [
+                    "Download waybill document from shipments page after shipment has been processed",
+                    "Attach waybill document to your packaged items",
+                    "Items to be shippped must be wrapped or packaged before pickup"
+                ],
+                "currency": "NGN",
+                "vat": 226,
+                "total": 3675.72,
+                "tracking": {
+                    "bars": 3,
+                    "label": "Average"
+                }
+            },
+            {
+                "courier_id": "fez-delivery_safelocker",
+                "courier_name": "Fez (Self Pick-up)",
+                "courier_image": "https://res.cloudinary.com/delivry/image/upload/v1694592734/courier_images/fez_logo_njmlnz.png",
+                "service_code": "fez-delivery",
+                "insurance": {
+                    "code": "not available",
+                    "fee": 0
+                },
+                "discount": {
+                    "percentage": 10,
+                    "symbol": "%",
+                    "discounted": 323
+                },
+                "service_type": "dropoff",
+                "waybill": false,
+                "on_demand": false,
+                "is_cod_available": false,
+                "tracking_level": 6,
+                "ratings": 4.3,
+                "votes": 287,
+                "connected_account": false,
+                "rate_card_amount": 1953,
+                "rate_card_currency": "NGN",
+                "pickup_eta": "Within 24 Hours",
+                "pickup_eta_time": "2025-07-19 07:19:39",
+                "dropoff_station": null,
+                "pickup_station": {
+                    "name": "Fez Safe Locker",
+                    "address": "Unilag Petrol Station- G99R+GFR, Dan Fodio Blvd,\nUniversity Of Lagos,101245, Lagos, Lagos, Nigeria",
+                    "phone": null
+                },
+                "delivery_eta": "Within 1 - 2 working days",
+                "delivery_eta_time": "2025-07-19 07:19:39",
+                "info": null,
+                "currency": "NGN",
+                "vat": 113,
+                "total": 1953,
+                "tracking": {
+                    "bars": 3,
+                    "label": "Average"
+                }
+            }
+        ],
+        "checkout_data": {
+            "ship_from": {
+                "name": "David Patrick",
+                "phone": "+2347014185686",
+                "email": "zuleaixyz@gmail.com",
+                "address": "H8C3+QQV, Ifelodun St, Ikeja, Lagos 102213, Lagos, Nigeria, Lagos, Nigeria"
+            },
+            "ship_to": {
+                "name": "shalom nwa",
+                "phone": "+2347014185656",
+                "email": "davidchuksdev@gmail.com",
+                "address": "Ishaga Road, Idi-Araba, Lagos, Nigeria, Lagos, Nigeria"
+            },
+            "currency": "NGN",
+            "package_amount": 5000,
+            "package_weight": 1,
+            "pickup_date": "July 17th 2025",
+            "is_invoice_required": false,
+            "cod_policy": "For COD shipments, package payments are collected by the assigned logistics company during delivery. We facilitate this process by connecting you to trusted partners who support COD services."
+        }
+    }
+}

@@ -1,3 +1,4 @@
+import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
@@ -66,4 +67,43 @@ export async function generateWelcomeBanner(userName: string): Promise<string> {
 
     return outputPath;
   }
+}
+
+/**
+ * Downloads an image from a URL and returns a Buffer.
+ */
+async function downloadImage(url: string): Promise<Buffer> {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  return Buffer.from(response.data, 'binary');
+}
+
+/**
+ * Generates a 2x2 collage from 4 image URLs. Returns a Buffer of the final image.
+ */
+export async function generateProductCollage(imageUrls: string[]): Promise<Buffer> {
+  if (!Array.isArray(imageUrls) || imageUrls.length < 4) {
+    throw new Error('At least 4 image URLs are required');
+  }
+  // Download the first 4 images
+  const images = await Promise.all(imageUrls.slice(0, 4).map(downloadImage));
+  // Resize all images to 400x400
+  const resized = await Promise.all(images.map(img => sharp(img).resize(400, 400).toBuffer()));
+  // Compose the collage (2x2 grid)
+  const collage = await sharp({
+    create: {
+      width: 800,
+      height: 800,
+      channels: 3,
+      background: { r: 255, g: 255, b: 255 }
+    }
+  })
+    .composite([
+      { input: resized[0], top: 0, left: 0 },
+      { input: resized[1], top: 0, left: 400 },
+      { input: resized[2], top: 400, left: 0 },
+      { input: resized[3], top: 400, left: 400 }
+    ])
+    .jpeg({ quality: 90 })
+    .toBuffer();
+  return collage;
 } 

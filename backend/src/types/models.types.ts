@@ -1,6 +1,6 @@
 // Database model types and interfaces
 
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface OrderItem {
   productId: string;
@@ -49,8 +49,10 @@ export interface ShortUrlDocument extends Document {
 }
 
 export interface UserDocument extends Document {
+  _id: Types.ObjectId;
   phoneNumber: string;
   name: string;
+  password: string;
   email: string;
   userType: 'customer' | 'seller';
   profileImage?: string; // URL or path
@@ -58,6 +60,7 @@ export interface UserDocument extends Document {
   storeDescription?: string;
   storeAddress?: string;
   storeCategories?: string[];
+  storeAddressValidation?: any; // Shipbubble address validation response
   createdAt: Date;
   updatedAt: Date;
 }

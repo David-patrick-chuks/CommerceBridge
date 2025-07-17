@@ -31,6 +31,7 @@ const CreateAccount: React.FC = () => {
   const [error, setError] = useState('');
   const [expired, setExpired] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   const code = getCodeFromQuery();
 
@@ -56,6 +57,27 @@ const CreateAccount: React.FC = () => {
         });
     }
   }, [code]);
+
+  useEffect(() => {
+    // Fetch CSRF token on mount
+    fetch(`${API_BASE}/api/users`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+      .then(res => {
+        // Try to get token from header first
+        const token = res.headers.get('x-csrf-token');
+        if (token) {
+          setCsrfToken(token);
+          return;
+        }
+        // Fallback: try to get from body if backend sends it there
+        return res.json().then(data => {
+          if (data && data.csrfToken) setCsrfToken(data.csrfToken);
+        });
+      })
+      .catch(() => setCsrfToken(null));
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,6 +114,8 @@ const CreateAccount: React.FC = () => {
       const res = await fetch(`${API_BASE}/api/users`, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
+        headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : undefined,
       });
       if (res.status === 410) {
         setExpired(true);

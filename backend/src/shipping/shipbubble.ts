@@ -427,3 +427,5 @@ export async function createFetchRatesRequest(
     throw error;
   }
 } 
+
+export { ShipbubbleAddress };
