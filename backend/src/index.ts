@@ -1,8 +1,8 @@
+import './types/express';
 import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import helmet from 'helmet';
 import { createServer } from 'http';
 import mongoose from 'mongoose'; // Added for MongoDB connection status
 
@@ -37,6 +37,7 @@ import { backupDatabase } from './utils/backup';
 import { checkFileIntegrity, updateFileHash } from './utils/file-integrity';
 import { rotateKey } from './utils/key-manager';
 import { logger } from './utils/logger';
+// Remove: import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config({ quiet: true });
@@ -63,15 +64,14 @@ const whatsappBot = new WhatsAppBot();
 // (Assume this is already done or will be done next)
 
 // Middleware
-app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true
 }));
 app.use(compression());
 // Use appropriate logger based on environment
-const logger = process.env.NODE_ENV === 'production' ? prodLogger : devLogger;
-app.use(logger);
+const loggerInstance = process.env.NODE_ENV === 'production' ? prodLogger : devLogger;
+app.use(loggerInstance);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
