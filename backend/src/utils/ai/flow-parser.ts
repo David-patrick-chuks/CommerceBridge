@@ -2,6 +2,10 @@ import { Type } from "@google/genai";
 import { parseStructured } from "./client";
 
 /**
+ * AI flow parser utilities
+ */
+
+/**
  * Comprehensive schema for all user types, flows, states, steps, and intents
  * Covers onboarding, customer, and seller flows as well as navigation and support.
  */

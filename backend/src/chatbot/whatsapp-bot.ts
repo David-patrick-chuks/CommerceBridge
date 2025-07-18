@@ -6,7 +6,7 @@ import qrcode from 'qrcode';
 import { Client, Message, MessageMedia, RemoteAuth } from 'whatsapp-web.js';
 import { MongoStore } from 'wwebjs-mongo';
 import { BotStatus, OrderData } from '../types';
-import { parseUserMessageForAllFlows } from '../utils/gemini/flow-parser';
+import { parseUserMessageForAllFlows } from '../utils/ai/flow-parser';
 import { ConversationFlow } from './conversation-flow';
 import { MessageHandler } from './message-handler';
 import { ChatSession } from './session-manager';
@@ -163,16 +163,16 @@ export class WhatsAppBot extends EventEmitter {
       // Get or create session for this user
       const session = await this.sessionManager.getSession(message.from, message.body);
 
-      // --- GEMINI FLOW PARSER INTEGRATION ---
+      // --- FLOW PARSER INTEGRATION ---
       try {
         const parsedFlow = await parseUserMessageForAllFlows(message.body || '');
-        console.log('[Gemini Flow Parser]', JSON.stringify(parsedFlow, null, 2));
+        console.log('[Flow Parser]', JSON.stringify(parsedFlow, null, 2));
         // Optionally: attach to session/context for future use
         session.lastParsedFlow = parsedFlow;
       } catch (err) {
-        console.error('[Gemini Flow Parser] Error:', err);
+        console.error('[Flow Parser] Error:', err);
       }
-      // --- END GEMINI FLOW PARSER INTEGRATION ---
+      // --- END FLOW PARSER INTEGRATION ---
 
       // Handle the message based on conversation flow
       const response = await this.conversationFlow.processMessage(message, session, this.client);

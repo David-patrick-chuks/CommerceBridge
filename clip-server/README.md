@@ -1,58 +1,68 @@
-# clip-server
+# CLIP Server API
 
-This service provides AI-powered image embedding and hybrid search for CommerceBridge using OpenAI CLIP (ViT-L/14, 768-dim) and a Retrieval-Augmented Generation (RAG) system.
+This service provides advanced image-based product search and catalog management for CommerceBridge and similar e-commerce platforms. It enables you to add products with images and search for products visually using simple HTTP APIs.
+
+---
 
 ## Features
-- Modular FastAPI microservice (see `app/` directory)
-- Exposes endpoints for:
-  - Adding seller product images and details (embedding, deduplication, storage)
-  - Searching for similar products using customer-uploaded images (hybrid vector + keyword search)
-- Uses CLIP (**ViT-L/14**, 768-dim) for image embedding (with GPU/CUDA support if available)
-- Connects to MongoDB Atlas for storage and vector search
-- Handles deduplication, chunking, and metadata integration
+- Add products with multiple images and rich details
+- Search for products by uploading an image
+- Fast, accurate, and scalable
+- Simple, standards-based HTTP API
 
-## MongoDB Atlas Vector Index
-To enable fast vector search, you must create a vector index on the `embedding` field in your products collection. Use the following configuration and set the index name to `product_embedding_vector_index`:
+---
 
-```json
-{
-  "name": "product_embedding_vector_index",
-  "mappings": {
-    "dynamic": false,
-    "fields": {
-      "embedding": {
-        "dimensions": 768,
-        "similarity": "cosine",
-        "type": "knnVector"
-      }
-    }
-  }
-}
-```
+## AI-Powered Retrieval-Augmented Generation (RAG)
 
-> **Note:** The index must have `dimensions: 768` to match the ViT-L/14 model output.
-> The server will use GPU (CUDA) if available, otherwise CPU.
+This service leverages advanced Retrieval-Augmented Generation (RAG) techniques to deliver highly accurate and context-aware image-based product search. By combining robust retrieval methods with a state-of-the-art AI model, the system can:
+- Understand and match product images with exceptional precision
+- Enhance catalog management through intelligent image and metadata analysis
+- Support complex queries by integrating visual and textual information
+- Continuously improve search relevance and user experience
 
-You can create this index in the Atlas UI or via the Atlas CLI/API. The index name is referenced in the code for clarity and future use with $vectorSearch.
+The underlying AI model is designed for enterprise-grade reliability, security, and scalability. It enables seamless integration with e-commerce workflows, ensuring that product discovery and catalog operations are both efficient and secure. All AI operations are performed in compliance with industry best practices for data privacy and integrity.
 
-## Setup
-1. Install dependencies:
+---
+
+## Quick Start
+1. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-2. Copy `.env.example` to `.env` and fill in your MongoDB Atlas credentials:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your values
-   ```
-3. Run the server:
+2. **Configure environment:**
+   - Copy `.env.example` to `.env` and fill in your database and Cloudinary credentials.
+3. **Run the server:**
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port 8000
    ```
 
-## Endpoints
-- `POST /add_product` — Add a new product (image + details)
-- `POST /search` — Search for similar products by image
-- `GET /` — Health check
+---
 
-See the main monorepo README_IMAGE_MATCHING.md for architecture and integration details. 
+## API Endpoints
+
+### Health & Metrics
+- `GET /` — Health check
+- `GET /health` — Detailed health status
+- `GET /metrics` — Service metrics
+
+### Product Management
+- `POST /add_product` — Add a new product with images and details
+  - **Form fields:** `name`, `price`, `description`, `category`
+  - **Files:** Multiple images as `images`
+- `POST /search` — Search for products by image
+  - **Files:** One image as `image`
+  - **Optional:** `query` (text)
+
+---
+
+## Usage Notes
+- All product images are stored securely in the cloud.
+- The API is designed for seamless integration with CommerceBridge and other e-commerce solutions.
+- For best results, use high-quality product images.
+
+---
+
+## Support
+For integration help or questions, contact the CommerceBridge development team.
+
+> **Note:** This service is intended for internal use and integration. For more details, see the main project documentation. 

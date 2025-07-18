@@ -13,8 +13,8 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "migrate": "ts-node src/database/migrate.ts",
     "seed": "ts-node src/database/seed.ts",
-    "test:gemini": "ts-node ./tests/test-gemini-support.ts",
-    "test:notifications": "ts-node ./tests/test-notification-system.ts",
+    "test:ai-support": "ts-node ./tests/test-ai-support.ts",
+    "test:notification-system": "ts-node ./tests/test-notification-system.ts",
     "test:image-handling": "ts-node ./tests/test-image-handling.ts",
     "test:image-handling:standalone": "ts-node ./tests/test-image-handling.ts --standalone",
     "update:hash": "ts-node src/utils/update-hash.ts"

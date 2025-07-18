@@ -1,9 +1,8 @@
-// Test script for Gemini support integration
-import 'dotenv/config';
-import { SupportMessages, supportService } from '../src/utils/gemini/index';
+// Test script for AI support integration
+import { SupportMessages, supportService } from '../src/utils/ai/index';
 
-async function testGeminiSupport() {
-  console.log('🧪 Testing Gemini Support Integration...\n');
+async function testAISupport() {
+  console.log('🧪 Testing AI Support Integration...\n');
 
   try {
     // Test 1: Basic support question
@@ -58,4 +57,4 @@ async function testGeminiSupport() {
 }
 
 // Run the test
-testGeminiSupport(); 
+testAISupport(); 

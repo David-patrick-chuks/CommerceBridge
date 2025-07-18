@@ -1,5 +1,5 @@
 /**
- * Gemini AI configuration and API key management
+ * AI configuration and API key management
  */
 
 import { GoogleGenAI } from "@google/genai";
@@ -7,37 +7,31 @@ import 'dotenv/config';
 
 // Load and validate API keys from environment
 const loadApiKeys = (): string[] => {
-  const rawKeys = process.env.GEMINI_API_KEYS || '';
-  
-  // Only show debug logs if DEBUG_GEMINI is set
-  if (process.env.DEBUG_GEMINI === 'true') {
-    console.log(`🔍 Debug: Raw GEMINI_API_KEYS: "${rawKeys}"`);
+  const rawKeys = process.env.AI_API_KEYS || '';
+  if (process.env.DEBUG_AI === 'true') {
+    console.log(`🔍 Debug: Raw AI_API_KEYS: "${rawKeys}"`);
   }
-  
   const apiKeys = rawKeys.split(',').filter(k => k.trim());
-  
-  if (process.env.DEBUG_GEMINI === 'true') {
+  if (process.env.DEBUG_AI === 'true') {
     console.log(`🔍 Debug: Filtered API keys count: ${apiKeys.length}`);
     console.log(`🔍 Debug: API keys:`, apiKeys.map((k, i) => `${i}: "${k.substring(0, 10)}..."`));
   }
-  
   if (apiKeys.length === 0) {
-    if (process.env.GENAI_API_KEY) {
-      apiKeys.push(process.env.GENAI_API_KEY);
-      if (process.env.DEBUG_GEMINI === 'true') {
-        console.log(`🔍 Debug: Using GENAI_API_KEY fallback`);
+    if (process.env.AI_API_KEY) {
+      apiKeys.push(process.env.AI_API_KEY);
+      if (process.env.DEBUG_AI === 'true') {
+        console.log(`🔍 Debug: Using AI_API_KEY fallback`);
       }
     } else {
-      console.error("FATAL: No API keys found. Please set GEMINI_API_KEYS or GENAI_API_KEY in your .env file.");
+      console.error("FATAL: No API keys found. Please set AI_API_KEYS or AI_API_KEY in your .env file.");
       process.exit(1);
     }
   }
-  
   return apiKeys;
 };
 
 /**
- * API Key Manager for handling multiple Gemini API keys with rotation
+ * API Key Manager for handling multiple AI API keys with rotation
  */
 export class ApiKeyManager {
   private keys: string[];
@@ -48,7 +42,7 @@ export class ApiKeyManager {
   }
 
   /**
-   * Get current Gemini client
+   * Get current AI client
    */
   getClient(): GoogleGenAI {
     return new GoogleGenAI({ apiKey: this.keys[this.currentIndex] });
@@ -59,7 +53,7 @@ export class ApiKeyManager {
    */
   switchKey(): GoogleGenAI {
     this.currentIndex = (this.currentIndex + 1) % this.keys.length;
-    if (process.env.DEBUG_GEMINI === 'true') {
+    if (process.env.DEBUG_AI === 'true') {
       console.log(`🔄 Switching to API key index ${this.currentIndex}`);
     }
     return this.getClient();
@@ -84,10 +78,10 @@ export class ApiKeyManager {
 export const apiKeyManager = new ApiKeyManager();
 
 /**
- * Default Gemini configuration
+ * Default AI configuration
  */
-export const DEFAULT_GEMINI_CONFIG = {
-  model: "gemini-1.5-flash", // Changed from gemini-2.5-flash to gemini-1.5-flash
+export const DEFAULT_AI_CONFIG = {
+  model: "gemini-1.5-flash", // Model name is hidden for abstraction
   temperature: 0.7,
   maxOutputTokens: 300,
   retryDelay: 5000, // 5 seconds

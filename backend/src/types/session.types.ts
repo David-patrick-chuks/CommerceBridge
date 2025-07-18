@@ -13,7 +13,7 @@ export interface UserSession {
   preferences?: UserPreferences;
   needsAccount?: boolean;
   /**
-   * The latest Gemini flow parser result for this session (if available)
+   * The latest AI flow parser result for this session (if available)
    */
   lastParsedFlow?: any;
 }

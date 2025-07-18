@@ -28,7 +28,7 @@ CommerceBridge is the **first AI-powered WhatsApp marketplace** where customers 
 - ✅ **Profile Creation**: Web link for account setup (only non-WhatsApp interaction)
 - ✅ **Digital Receipt as Image**: After payment, customers receive a digital receipt image via WhatsApp
 - ✅ **AI-Powered Image Search & Matching**: Find and add products using images, powered by the clip-server
-- ✅ **Gemini AI Support**: Intelligent customer support with automatic escalation to human agents
+- ✅ **AI-Powered Support**: Intelligent customer support with automatic escalation to human agents
 
 ### Advanced & Planned Features
 - 📦 **Order Status Notifications**

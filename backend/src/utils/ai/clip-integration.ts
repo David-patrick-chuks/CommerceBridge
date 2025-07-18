@@ -1,5 +1,5 @@
 /**
- * CLIP server integration utilities
+ * AI Clip integration utilities
  */
 
 import axios from 'axios';
@@ -7,7 +7,7 @@ import FormData from 'form-data';
 import { ClipServerResponse, ProductInfo } from './types';
 
 /**
- * CLIP server integration service
+ * AI Clip integration service
  */
 export class ClipIntegration {
   private readonly baseUrl: string;
@@ -17,7 +17,7 @@ export class ClipIntegration {
   }
 
   /**
-   * Send product images and details to the CLIP server
+   * Send product images and details to the AI Clip server
    */
   async sendProductToClipServer(
     images: Array<Buffer | string>,
@@ -79,14 +79,14 @@ export class ClipIntegration {
   }
 
   /**
-   * Check CLIP server health
+   * Check AI Clip server health
    */
   async checkHealth(): Promise<boolean> {
     try {
       const response = await axios.get(`${this.baseUrl}/health`, { timeout: 5000 });
       return response.status === 200;
     } catch (error) {
-      console.error('CLIP server health check failed:', error);
+      console.error('AI Clip server health check failed:', error);
       return false;
     }
   }

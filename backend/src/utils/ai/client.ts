@@ -1,77 +1,66 @@
 /**
- * Core Gemini API client with retry logic and error handling
+ * Core AI API client with retry logic and error handling
  */
 
-import { apiKeyManager, DEFAULT_GEMINI_CONFIG } from './config';
-import { GeminiRequest, GeminiResponse } from './types';
+import { apiKeyManager, DEFAULT_AI_CONFIG } from './config';
+import { AIRequest, AIResponse } from './types';
 
 /**
- * Error types for Gemini API
+ * Error types for AI API
  */
-export class GeminiError extends Error {
+export class AIError extends Error {
   constructor(
     message: string,
     public readonly isRateLimit: boolean = false,
     public readonly isServiceUnavailable: boolean = false
   ) {
     super(message);
-    this.name = 'GeminiError';
+    this.name = 'AIError';
   }
 }
 
 /**
- * Core Gemini API client with retry logic and API key rotation
+ * Core AI API client with retry logic and API key rotation
  */
-export class GeminiClient {
+export class AIClient {
   /**
    * Generate content with automatic retry and API key rotation
    */
   async generateContent(
-    request: GeminiRequest,
+    request: AIRequest,
     maxRetries?: number
-  ): Promise<GeminiResponse> {
+  ): Promise<AIResponse> {
     // Set maxRetries to the number of API keys if not provided
     const totalRetries = maxRetries ?? apiKeyManager.getKeyCount();
     let retryCount = 0;
     let client = apiKeyManager.getClient();
 
-    console.log(`🔍 Debug: API Key count: ${apiKeyManager.getKeyCount()}, Current index: ${apiKeyManager.getCurrentIndex()}`);
-    console.log(`🔍 Debug: Request model: ${request.model}, config:`, request.config);
-
     while (retryCount < totalRetries) {
       try {
-        console.log(`🔑 Using API Key index: ${apiKeyManager.getCurrentIndex()}`);
         const response = await client.models.generateContent(request);
-        console.log(`✅ Success: Response received`);
-        return response;
+        // Ensure response.text is always a string
+        return { ...response, text: response.text ?? '' };
       } catch (error: any) {
         retryCount++;
-        console.error(`❌ Error attempt ${retryCount}/${totalRetries}:`, error.message);
-        console.error(`❌ Full error:`, error);
-
         if (retryCount >= totalRetries) {
-          console.error("Maximum retry attempts reached. Could not complete the API call.");
-          throw new GeminiError("Failed to generate content after maximum retries.");
+          throw new AIError("Failed to generate content after maximum retries.");
         }
 
         const isRateLimitError = error.message?.includes('429');
         const isServiceUnavailableError = error.message?.includes('503');
 
         if (isRateLimitError) {
-          console.error(`🚨 API key index ${apiKeyManager.getCurrentIndex()} limit exhausted, switching...`);
           client = apiKeyManager.switchKey();
-          await this.delay(DEFAULT_GEMINI_CONFIG.retryDelay);
+          await this.delay(DEFAULT_AI_CONFIG.retryDelay);
         } else if (isServiceUnavailableError) {
-          console.error("⏳ Service is unavailable. Retrying in 5 seconds...");
-          await this.delay(DEFAULT_GEMINI_CONFIG.retryDelay);
+          await this.delay(DEFAULT_AI_CONFIG.retryDelay);
         } else {
-          console.error("⚠ Error generating content:", error.message);
-          throw new GeminiError(error.message);
+          throw new AIError(error.message);
         }
       }
     }
 
-    throw new GeminiError("Unexpected error in generateContent");
+    throw new AIError("Unexpected error in generateContent");
   }
 
   /**
@@ -82,8 +71,8 @@ export class GeminiClient {
     schema: any,
     systemInstruction?: string
   ): Promise<any> {
-    const request: GeminiRequest = {
-      model: DEFAULT_GEMINI_CONFIG.model,
+    const request: AIRequest = {
+      model: DEFAULT_AI_CONFIG.model,
       config: {
         responseMimeType: "application/json",
         responseSchema: schema,
@@ -97,13 +86,13 @@ export class GeminiClient {
     const response = await this.generateContent(request);
 
     if (!response?.text) {
-      throw new GeminiError("Gemini failed to return structured data.");
+      throw new AIError("AI failed to return structured data.");
     }
 
     try {
       return JSON.parse(response.text);
     } catch (error) {
-      throw new GeminiError("Failed to parse JSON response from Gemini.");
+      throw new AIError("Failed to parse JSON response from AI.");
     }
   }
 
@@ -113,13 +102,13 @@ export class GeminiClient {
   async generateTextResponse(
     prompt: string,
     systemInstruction?: string,
-    config?: Partial<typeof DEFAULT_GEMINI_CONFIG>
+    config?: Partial<typeof DEFAULT_AI_CONFIG>
   ): Promise<string> {
-    const request: GeminiRequest = {
-      model: DEFAULT_GEMINI_CONFIG.model,
+    const request: AIRequest = {
+      model: DEFAULT_AI_CONFIG.model,
       config: {
-        temperature: config?.temperature ?? DEFAULT_GEMINI_CONFIG.temperature,
-        maxOutputTokens: config?.maxOutputTokens ?? DEFAULT_GEMINI_CONFIG.maxOutputTokens
+        temperature: config?.temperature ?? DEFAULT_AI_CONFIG.temperature,
+        maxOutputTokens: config?.maxOutputTokens ?? DEFAULT_AI_CONFIG.maxOutputTokens
       },
       systemInstruction,
       contents: [{ parts: [{ text: prompt }] }]
@@ -128,7 +117,7 @@ export class GeminiClient {
     const response = await this.generateContent(request);
 
     if (!response?.text) {
-      throw new GeminiError("Gemini failed to generate text response.");
+      throw new AIError("AI failed to generate text response.");
     }
 
     return response.text.trim();
@@ -154,23 +143,23 @@ export class GeminiClient {
 }
 
 // Export singleton instance
-export const geminiClient = new GeminiClient();
+export const aiClient = new AIClient();
 
 /**
- * Generic function to parse user message into structured data using Gemini
+ * Generic function to parse user message into structured data using AI
  */
 export async function parseStructured(
   userMessage: string,
   schema: any,
   systemInstruction?: string
 ): Promise<any> {
-  return geminiClient.parseStructured(userMessage, schema, systemInstruction);
+  return aiClient.parseStructured(userMessage, schema, systemInstruction);
 }
 
 /**
- * @deprecated Use geminiClient.generateContent() instead
+ * @deprecated Use aiClient.generateContent() instead
  * Legacy function for backward compatibility
  */
-export async function generateWithRetry(request: any, maxRetries: number = DEFAULT_GEMINI_CONFIG.maxRetries): Promise<any> {
-  return geminiClient.generateContent(request, maxRetries);
+export async function generateWithRetry(request: any, maxRetries: number = DEFAULT_AI_CONFIG.maxRetries): Promise<any> {
+  return aiClient.generateContent(request, maxRetries);
 } 

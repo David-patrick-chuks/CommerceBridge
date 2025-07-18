@@ -2,7 +2,7 @@ import axios from 'axios';
 import path from 'path';
 import { MessageMedia } from 'whatsapp-web.js';
 import { UserSession } from '../../types/session.types';
-import { SupportMessages, supportService } from '../../utils/gemini/index';
+import { supportService } from '../../utils/ai/index';
 import { formatCode, formatMonospace, formatWhatsAppBold, formatWhatsAppItalic } from '../../utils/text-formatter';
 
 export class OnboardingFlow {
@@ -104,27 +104,13 @@ Type *1* for Customer or *2* for Seller`;
     // Convert session userType to Gemini UserType (filter out 'unknown')
     const userType = session.userType === 'unknown' ? undefined : session.userType as 'customer' | 'seller';
 
-    // Check if question should be escalated to human support
-    const shouldEscalate = await supportService.shouldEscalateToHuman(userQuestion, userType);
-    
-    if (shouldEscalate) {
-      // Escalate to human support
-      session.currentState = 'escalated_support';
-      return SupportMessages.getEscalationMessage();
-    }
-
-    // Use Gemini to generate AI response
+    // Use AI to generate support response (skip escalation logic for now)
     try {
-      const aiResponse = await supportService.handleSupportQuestion(
-        userQuestion, 
-        userType, 
-        session.phoneNumber
-      );
-      
-      return SupportMessages.wrapAiResponse(aiResponse);
+      const aiResponse = await supportService.handleCustomerSupport({ question: userQuestion, userType, phoneNumber: session.phoneNumber });
+      return aiResponse;
     } catch (error) {
       console.error('Error handling support question:', error);
-      return SupportMessages.getSupportErrorMessage();
+      return 'Sorry, there was an error handling your support request. Please try again later.';
     }
   }
 

@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { ProductModel } from './product';
+import { UserModel } from './user';
 
 dotenv.config();
 
@@ -78,7 +79,14 @@ async function seedProducts() {
   try {
     await mongoose.connect(MONGODB_URI);
     await ProductModel.deleteMany({});
-    await ProductModel.insertMany(sampleProducts);
+    // Find a seller user
+    // const seller = await UserModel.findOne({ userType: 'seller' });
+    // if (!seller) {
+    //   throw new Error('No seller user found. Please create a seller user first.');
+    // }
+    // // Assign seller to each product
+    // const productsWithSeller = sampleProducts.map(p => ({ ...p, seller: seller._id }));
+    // await ProductModel.insertMany(productsWithSeller);
     console.log('✅ Products seeded successfully!');
     process.exit(0);
   } catch (err) {

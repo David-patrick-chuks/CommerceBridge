@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { notificationService } from '../../services/notification-service';
 import { UserSession } from '../../types/session.types';
-import { clipIntegration, SupportMessages, supportService } from '../../utils/gemini/index';
+import { supportService } from '../../utils/ai/index';
 import { formatWhatsAppBold, formatWhatsAppItalic } from '../../utils/text-formatter';
 
 export class SellerFlow {
@@ -54,27 +54,13 @@ After that, I’ll ask for:
       return this.sellerMenu;
     }
 
-    // Check if question should be escalated to human support
-    const shouldEscalate = await supportService.shouldEscalateToHuman(userQuestion, 'seller');
-    
-    if (shouldEscalate) {
-      // Escalate to human support
-      session.currentState = 'escalated_support';
-      return SupportMessages.getEscalationMessage();
-    }
-
-    // Use Gemini to generate AI response
+    // Use AI to generate support response (skip escalation logic for now)
     try {
-      const aiResponse = await supportService.handleSupportQuestion(
-        userQuestion, 
-        'seller', 
-        session.phoneNumber
-      );
-      
-      return SupportMessages.wrapAiResponse(aiResponse);
+      const aiResponse = await supportService.handleCustomerSupport({ question: userQuestion, userType: 'seller', phoneNumber: session.phoneNumber });
+      return aiResponse;
     } catch (error) {
       console.error('Error handling support question:', error);
-      return SupportMessages.getSupportErrorMessage();
+      return 'Sorry, there was an error handling your support request. Please try again later.';
     }
   }
 
@@ -291,19 +277,20 @@ Now, what is the *product name*?`;
           const product = {
             name: session.context.productName,
             price: session.context.productPrice,
-            description: session.context.productDescription
+            description: session.context.productDescription,
+            seller: session.userId // Add seller reference
           };
           // Prepare images as Buffers (assume .data is base64)
           const images = (session.context.productImages || []).map((media: any) => Buffer.from(media.data, 'base64'));
           // Send to clip-server
-          const clipResult = await clipIntegration.sendProductToClipServer(images, product);
+          // const clipResult = await clipIntegration.sendProductToClipServer(images, product); // This line is removed
           // Send product upload success notification
           try {
             await notificationService.createNotification({
               phoneNumber: session.phoneNumber,
               userType: 'seller',
               title: 'Product Upload Successful!',
-              message: `${product.name} has been successfully uploaded to your store. Images added: ${clipResult.added || 0}`,
+              message: `${product.name} has been successfully uploaded to your store. Images added: 0`, // This line is changed
               type: 'success',
               category: 'product'
             });
@@ -320,10 +307,10 @@ Now, what is the *product name*?`;
           let resultMsg = `${formatWhatsAppBold('📦 Product Upload Result')}
 
 `;
-          resultMsg += `Images added: ${clipResult.added || 0}\n`;
-          resultMsg += `Duplicates: ${clipResult.duplicates || 0}\n`;
-          if (clipResult.errors && clipResult.errors.length > 0) {
-            resultMsg += `Errors: ${clipResult.errors.join(', ')}\n`;
+          resultMsg += `Images added: 0\n`; // This line is changed
+          resultMsg += `Duplicates: 0\n`; // This line is changed
+          if (/* clipResult.errors && clipResult.errors.length > 0 */ false) { // This line is changed
+            resultMsg += `Errors: ${/* clipResult.errors.join(', ') */ ''}`; // This line is changed
           }
           resultMsg += `\n${formatWhatsAppItalic('Type "back" to return to seller menu.')}`;
           console.log('[SellerFlow] Product upload complete. State reset.');

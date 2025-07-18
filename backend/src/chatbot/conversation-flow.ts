@@ -22,9 +22,9 @@ export class ConversationFlow {
     session.phoneNumber = normalizedPhone;
     const messageText = message.body.toLowerCase().trim();
     
-    // --- LOG GEMINI FLOW PARSER RESULT IF AVAILABLE ---
+    // --- LOG AI FLOW PARSER RESULT IF AVAILABLE ---
     if (session.lastParsedFlow) {
-      console.log('[ConversationFlow] Gemini parsed flow:', JSON.stringify(session.lastParsedFlow, null, 2));
+      console.log('[ConversationFlow] AI parsed flow:', JSON.stringify(session.lastParsedFlow, null, 2));
       if (session.lastParsedFlow.intent && session.lastParsedFlow.intent !== 'unknown') {
         console.log(`[ConversationFlow] Parsed intent: ${session.lastParsedFlow.intent}`);
       }

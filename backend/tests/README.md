@@ -31,8 +31,8 @@ npm run test:image-handling:standalone
 - ✅ Existing log file detection
 - ✅ TypeScript module imports
 
-### 2. `test-gemini-support.ts`
-**Purpose**: Tests the Gemini AI integration for customer support and escalation handling.
+### 2. `test-ai-support.ts`
+**Purpose**: Tests the AI-powered support system for customer and seller communications.
 
 **Key Features**:
 - Tests basic support question handling for customers and sellers
@@ -42,7 +42,7 @@ npm run test:image-handling:standalone
 
 **Usage**:
 ```bash
-npm run test:gemini-support
+npm run test:ai-support
 ```
 
 **What it tests**:
@@ -100,7 +100,7 @@ Before running these tests, ensure you have:
 
 3. **External Services**:
    - WhatsApp Web JS connection (for image handling tests)
-   - Gemini AI API key (for support tests)
+   - AI API key (for support tests)
    - Paystack API key (if testing payment-related features)
 
 ## Running Tests
@@ -111,8 +111,8 @@ Before running these tests, ensure you have:
 npm run test:image-handling
 npm run test:image-handling:standalone
 
-# Gemini support tests
-npm run test:gemini-support
+# AI support tests
+npm run test:ai-support
 
 # Notification system tests
 npm run test:notification-system

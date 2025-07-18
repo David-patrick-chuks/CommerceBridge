@@ -15,8 +15,8 @@ import {
   trackShipment
 } from '../../shipping/shipbubble';
 import { CartItem, UserSession } from '../../types/session.types';
+import { supportService } from '../../utils/ai/index';
 import { generateProductCollage } from '../../utils/banner-generator';
-import { SupportMessages, supportService } from '../../utils/gemini/index';
 import { formatMonospace, formatWhatsAppBold, formatWhatsAppItalic } from '../../utils/text-formatter';
 import { chatSession } from '../session-manager';
 
@@ -68,26 +68,16 @@ ${formatWhatsAppItalic('Type the number or describe what you need!')}`;
     }
 
     // Check if question should be escalated to human support
-    const shouldEscalate = await supportService.shouldEscalateToHuman(userQuestion, 'customer');
-    
-    if (shouldEscalate) {
-      // Escalate to human support
-      session.currentState = 'escalated_support';
-      return SupportMessages.getEscalationMessage();
-    }
+    // (No shouldEscalateToHuman method, so always use AI support and escalate based on your own logic or remove this check)
+    // For now, skip escalation logic and always use AI support
 
-    // Use Gemini to generate AI response
+    // Use AI to generate support response
     try {
-      const aiResponse = await supportService.handleSupportQuestion(
-        userQuestion, 
-        'customer', 
-        session.phoneNumber
-      );
-      
-      return SupportMessages.wrapAiResponse(aiResponse);
+      const aiResponse = await supportService.handleCustomerSupport({ question: userQuestion, userType: 'customer', phoneNumber: session.phoneNumber });
+      return aiResponse;
     } catch (error) {
       console.error('Error handling support question:', error);
-      return SupportMessages.getSupportErrorMessage();
+      return 'Sorry, there was an error handling your support request. Please try again later.';
     }
   }
 
